@@ -10,7 +10,7 @@ OS: Ubuntu 18.04
 
 Compilers: GCC, Clang, emcc
 
-Libraries: binaryen
+Libraries: Binaryen v72
 
 ## 命名規約
 
@@ -32,5 +32,5 @@ $ make
 ## 実行方法
 
 ```shell
-$ wasm-watermarker <input-wasm>
+$ wasm-watermarker <input-wasm> <watermark>
 ```

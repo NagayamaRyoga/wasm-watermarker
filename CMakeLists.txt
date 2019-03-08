@@ -12,4 +12,7 @@ if (NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release)
 endif (NOT CMAKE_BUILD_TYPE)
 
+include(ExternalProject)
+include(cmake/binaryen.cmake)
+
 add_subdirectory(src)
