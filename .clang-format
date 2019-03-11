@@ -1,3 +1,10 @@
 BasedOnStyle: LLVM
 IndentWidth: 4
+AccessModifierOffset: -4
 NamespaceIndentation: All
+AlwaysBreakTemplateDeclarations: true
+AllowShortFunctionsOnASingleLine: Empty
+BreakConstructorInitializersBeforeComma: true
+ColumnLimit: 120
+BinPackParameters: false
+BinPackArguments: false
