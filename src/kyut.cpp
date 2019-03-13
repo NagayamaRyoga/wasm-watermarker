@@ -1,12 +1,14 @@
-#include <iostream>
+#include <cstdio>
 
+#include <fmt/format.h>
 #include <wasm-io.h>
 
 int main(int argc, char *argv[]) {
     try {
         if (argc != 3) {
-            std::cerr << "WebAssembly digital watermarker." << std::endl;
-            std::cerr << "usage: kyut <input file> <watermark>" << std::endl;
+            fmt::print(stderr,
+                       "WebAssembly digital watermarker.\n"
+                       "usage: kyut <input file> <watermark>\n");
 
             return 1;
         }
@@ -14,7 +16,7 @@ int main(int argc, char *argv[]) {
         wasm::Module module;
         wasm::ModuleReader{}.readBinary(argv[1], module);
     } catch (const std::exception &e) {
-        std::cerr << e.what() << '\n';
+        fmt::print(stderr, "error: {}\n", e.what());
 
         return 1;
     }

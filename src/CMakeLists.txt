@@ -4,6 +4,7 @@ add_executable(kyut
 
 target_link_libraries(kyut
     libbinaryen
+    libfmt
 )
 
 if (WIN32)
