@@ -5,7 +5,7 @@ ExternalProject_Add(
     INSTALL_COMMAND ""
     TEST_COMMAND ""
     CMAKE_ARGS
-        -DBUILD_STATIC_LIB=ON
+        -DBUILD_STATIC_LIB=OFF
         -DCMAKE_BUILD_TYPE=Release
 )
 
@@ -14,17 +14,14 @@ ExternalProject_Get_Property(binaryen binary_dir)
 
 file(MAKE_DIRECTORY ${source_dir}/src)
 
-add_library(libbinaryen STATIC IMPORTED)
+add_library(libbinaryen SHARED IMPORTED)
 add_dependencies(libbinaryen binaryen)
+
+set(binaryen_SHARED_LIB ${binary_dir}/bin/libbinaryen${CMAKE_SHARED_LIBRARY_SUFFIX})
 
 set_target_properties(libbinaryen
     PROPERTIES
-    IMPORTED_LOCATION ${binary_dir}/lib/libbinaryen.a
+    IMPORTED_LOCATION ${binaryen_SHARED_LIB}
+    IMPORTED_IMPLIB ${binary_dir}/lib/libbinaryen${CMAKE_SHARED_LIBRARY_SUFFIX}.a
     INTERFACE_INCLUDE_DIRECTORIES ${source_dir}/src
-    INTERFACE_LINK_LIBRARIES ${binary_dir}/lib/libwasm.a
-    INTERFACE_LINK_LIBRARIES ${binary_dir}/lib/libir.a
-    INTERFACE_LINK_LIBRARIES ${binary_dir}/lib/libcfg.a
-    INTERFACE_LINK_LIBRARIES ${binary_dir}/lib/libpasses.a
-    INTERFACE_LINK_LIBRARIES ${binary_dir}/lib/libsupport.a
-    INTERFACE_LINK_LIBRARIES ${binary_dir}/lib/libasmjs.a
 )
