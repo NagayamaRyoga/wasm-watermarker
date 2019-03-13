@@ -17,11 +17,15 @@ file(MAKE_DIRECTORY ${source_dir}/src)
 add_library(libbinaryen SHARED IMPORTED)
 add_dependencies(libbinaryen binaryen)
 
-set(binaryen_SHARED_LIB ${binary_dir}/bin/libbinaryen${CMAKE_SHARED_LIBRARY_SUFFIX})
+if (WIN32)
+    set(binaryen_SHARED_LIB ${binary_dir}/bin/libbinaryen${CMAKE_SHARED_LIBRARY_SUFFIX})
+else ()
+    set(binaryen_SHARED_LIB ${binary_dir}/lib/libbinaryen${CMAKE_SHARED_LIBRARY_SUFFIX})
+endif ()
 
 set_target_properties(libbinaryen
     PROPERTIES
     IMPORTED_LOCATION ${binaryen_SHARED_LIB}
-    IMPORTED_IMPLIB ${binary_dir}/lib/libbinaryen${CMAKE_SHARED_LIBRARY_SUFFIX}.a
+    IMPORTED_IMPLIB ${binary_dir}/lib/libbinaryen.dll.a
     INTERFACE_INCLUDE_DIRECTORIES ${source_dir}/src
 )
