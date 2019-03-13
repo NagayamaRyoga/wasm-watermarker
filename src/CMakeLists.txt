@@ -3,5 +3,5 @@ add_executable(kyut
 )
 
 target_link_libraries(kyut
-    binaryen_wasm
+    libbinaryen
 )
