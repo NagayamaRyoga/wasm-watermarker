@@ -1,11 +1,11 @@
 ExternalProject_Add(
     binaryen
-    URL https://github.com/WebAssembly/binaryen/archive/version_72.zip
+    URL https://github.com/WebAssembly/binaryen/archive/1.38.29.tar.gz
     PREFIX binaryen
     INSTALL_COMMAND ""
     TEST_COMMAND ""
     CMAKE_ARGS
-        -DBUILD_STATIC_LIB=OFF
+        -DBUILD_STATIC_LIB=ON
         -DCMAKE_BUILD_TYPE=Release
 )
 
@@ -14,18 +14,22 @@ ExternalProject_Get_Property(binaryen binary_dir)
 
 file(MAKE_DIRECTORY ${source_dir}/src)
 
-add_library(libbinaryen SHARED IMPORTED)
-add_dependencies(libbinaryen binaryen)
+add_library(binaryen::binaryen STATIC IMPORTED)
+add_dependencies(binaryen::binaryen binaryen)
 
-if (WIN32)
-    set(binaryen_SHARED_LIB ${binary_dir}/bin/libbinaryen${CMAKE_SHARED_LIBRARY_SUFFIX})
-else ()
-    set(binaryen_SHARED_LIB ${binary_dir}/lib/libbinaryen${CMAKE_SHARED_LIBRARY_SUFFIX})
-endif ()
-
-set_target_properties(libbinaryen
+set_target_properties(binaryen::binaryen
     PROPERTIES
-    IMPORTED_LOCATION ${binaryen_SHARED_LIB}
-    IMPORTED_IMPLIB ${binary_dir}/lib/libbinaryen.dll.a
+    IMPORTED_LOCATION ${binary_dir}/lib/libpasses.a
     INTERFACE_INCLUDE_DIRECTORIES ${source_dir}/src
+    INTERFACE_LINK_LIBRARIES "${binaryen_other_libraries}"
+)
+
+target_link_libraries(binaryen::binaryen INTERFACE
+    ${binary_dir}/lib/libwasm.a
+    ${binary_dir}/lib/libasmjs.a
+    ${binary_dir}/lib/libpasses.a
+    ${binary_dir}/lib/libcfg.a
+    ${binary_dir}/lib/libir.a
+    ${binary_dir}/lib/libemscripten-optimizer.a
+    ${binary_dir}/lib/libsupport.a
 )
