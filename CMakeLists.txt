@@ -12,6 +12,8 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif (NOT CMAKE_BUILD_TYPE)
 
+find_package(Threads REQUIRED)
+
 include(ExternalProject)
 include(cmake/binaryen.cmake)
 include(cmake/fmt.cmake)

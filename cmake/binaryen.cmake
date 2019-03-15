@@ -17,14 +17,7 @@ file(MAKE_DIRECTORY ${source_dir}/src)
 add_library(binaryen::binaryen STATIC IMPORTED)
 add_dependencies(binaryen::binaryen binaryen)
 
-set_target_properties(binaryen::binaryen
-    PROPERTIES
-    IMPORTED_LOCATION ${binary_dir}/lib/libpasses.a
-    INTERFACE_INCLUDE_DIRECTORIES ${source_dir}/src
-    INTERFACE_LINK_LIBRARIES "${binaryen_other_libraries}"
-)
-
-target_link_libraries(binaryen::binaryen INTERFACE
+set(binaryen_LIBS
     ${binary_dir}/lib/libwasm.a
     ${binary_dir}/lib/libasmjs.a
     ${binary_dir}/lib/libpasses.a
@@ -32,4 +25,13 @@ target_link_libraries(binaryen::binaryen INTERFACE
     ${binary_dir}/lib/libir.a
     ${binary_dir}/lib/libemscripten-optimizer.a
     ${binary_dir}/lib/libsupport.a
+    ${binary_dir}/lib/libwasm.a
+    Threads::Threads
+)
+
+set_target_properties(binaryen::binaryen
+    PROPERTIES
+    IMPORTED_LOCATION ${binary_dir}/lib/libpasses.a
+    INTERFACE_INCLUDE_DIRECTORIES ${source_dir}/src
+    INTERFACE_LINK_LIBRARIES "${binaryen_LIBS}"
 )
