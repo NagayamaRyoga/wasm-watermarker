@@ -1,12 +1,14 @@
-#include <cstdio>
+#include <iostream>
 
-#include <fmt/format.h>
+#include <fmt/ostream.h>
 #include <wasm-io.h>
+
+#include "kyut/pass/operand_swapping_watermarker.hpp"
 
 int main(int argc, char *argv[]) {
     try {
         if (argc != 3) {
-            fmt::print(stderr,
+            fmt::print(std::cerr,
                        "WebAssembly digital watermarker.\n"
                        "usage: kyut <input file> <watermark>\n");
 
@@ -14,9 +16,14 @@ int main(int argc, char *argv[]) {
         }
 
         wasm::Module module;
-        wasm::ModuleReader{}.readBinary(argv[1], module);
+        wasm::ModuleReader{}.read(argv[1], module);
+
+        kyut::pass::embedWatermarkOperandSwapping(module);
+    } catch (wasm::ParseException &e) {
+        fmt::print(std::cerr, "parse error\n");
+        e.dump(std::cerr);
     } catch (const std::exception &e) {
-        fmt::print(stderr, "error: {}\n", e.what());
+        fmt::print(std::cerr, "error: {}\n", e.what());
 
         return 1;
     }
