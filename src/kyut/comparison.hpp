@@ -36,6 +36,23 @@ namespace wasm {
         }
     }
 
+    bool operator<(const ExpressionList &lhs, const ExpressionList &rhs) noexcept {
+        auto lIt = lhs.begin();
+        auto lEnd = lhs.end();
+        auto rIt = rhs.begin();
+        auto rEnd = rhs.end();
+
+        for (; lIt != lEnd && rIt != rEnd; ++lIt, ++rIt) {
+            if (**lIt < **rIt) {
+                return true;
+            } else if (**rIt < **lIt) {
+                return false;
+            }
+        }
+
+        return !(lIt != lEnd) && rIt != rEnd;
+    }
+
     bool operator<(const Expression &lhs, const Expression &rhs) noexcept {
         if (lhs._id != rhs._id) {
             return lhs._id < rhs._id;
@@ -46,31 +63,7 @@ namespace wasm {
             const auto &l = static_cast<const Block &>(lhs);
             const auto &r = static_cast<const Block &>(rhs);
 
-            if (l.type != r.type) {
-                return l.type < r.type;
-            }
-
-            // FIXME: use std.
-            auto lIt = std::begin(l.list);
-            auto lEnd = std::end(l.list);
-            auto rIt = std::begin(r.list);
-            auto rEnd = std::end(r.list);
-
-            for (; lIt != lEnd && rIt != rEnd; ++lIt, ++rIt) {
-                if (**lIt < **rIt) {
-                    return true;
-                } else if (**rIt < **lIt) {
-                    return false;
-                }
-            }
-
-            return !(lIt != lEnd) && rIt != rEnd;
-
-            // return std::lexicographical_compare(std::begin(l.list),
-            //                                     std::end(l.list),
-            //                                     std::begin(r.list),
-            //                                     std::end(r.list),
-            //                                     [](const auto &a, const auto &b) { return *a < *b; });
+            return std::tie(l.type, l.list) < std::tie(r.type, r.list);
         }
 
         case Expression::Id::IfId: {
@@ -108,11 +101,17 @@ namespace wasm {
         case Expression::Id::SwitchId:
             WASM_UNREACHABLE(); // TODO:
 
-        case Expression::Id::CallId:
-            WASM_UNREACHABLE(); // TODO:
+        case Expression::Id::CallId: {
+            const auto &l = static_cast<const Call &>(lhs);
+            const auto &r = static_cast<const Call &>(rhs);
+            return std::tie(l.type, l.operands, l.target) < std::tie(r.type, r.operands, r.target);
+        }
 
-        case Expression::Id::CallIndirectId:
-            WASM_UNREACHABLE(); // TODO:
+        case Expression::Id::CallIndirectId: {
+            const auto &l = static_cast<const CallIndirect &>(lhs);
+            const auto &r = static_cast<const CallIndirect &>(rhs);
+            return std::tie(l.type, l.operands, *l.target) < std::tie(r.type, r.operands, *r.target);
+        }
 
         case Expression::Id::GetLocalId: {
             const auto &l = static_cast<const GetLocal &>(lhs);
@@ -138,11 +137,19 @@ namespace wasm {
             return std::tie(l.type, l.name, *l.value) < std::tie(r.type, r.name, *r.value);
         }
 
-        case Expression::Id::LoadId:
-            WASM_UNREACHABLE(); // TODO:
+        case Expression::Id::LoadId: {
+            const auto &l = static_cast<const Load &>(lhs);
+            const auto &r = static_cast<const Load &>(rhs);
+            return std::tie(l.type, l.bytes, l.signed_, l.offset, l.align, l.isAtomic, *l.ptr) <
+                   std::tie(r.type, r.bytes, r.signed_, r.offset, r.align, r.isAtomic, *r.ptr);
+        }
 
-        case Expression::Id::StoreId:
-            WASM_UNREACHABLE(); // TODO:
+        case Expression::Id::StoreId: {
+            const auto &l = static_cast<const Store &>(lhs);
+            const auto &r = static_cast<const Store &>(rhs);
+            return std::tie(l.type, l.bytes, l.offset, l.align, l.isAtomic, *l.ptr, *l.value) <
+                   std::tie(r.type, r.bytes, r.offset, r.align, r.isAtomic, *r.ptr, *r.value);
+        }
 
         case Expression::Id::ConstId: {
             const auto &l = static_cast<const Const &>(lhs);
@@ -197,17 +204,32 @@ namespace wasm {
         case Expression::Id::HostId:
             WASM_UNREACHABLE(); // TODO:
 
-        case Expression::Id::AtomicRMWId:
-            WASM_UNREACHABLE(); // TODO:
+        case Expression::Id::AtomicRMWId: {
+            const auto &l = static_cast<const AtomicRMW &>(lhs);
+            const auto &r = static_cast<const AtomicRMW &>(rhs);
+            return std::tie(l.type, l.op, l.bytes, l.offset, *l.ptr, *l.value) <
+                   std::tie(r.type, r.op, r.bytes, r.offset, *r.ptr, *r.value);
+        }
 
-        case Expression::Id::AtomicCmpxchgId:
-            WASM_UNREACHABLE(); // TODO:
+        case Expression::Id::AtomicCmpxchgId: {
+            const auto &l = static_cast<const AtomicCmpxchg &>(lhs);
+            const auto &r = static_cast<const AtomicCmpxchg &>(rhs);
+            return std::tie(l.type, l.bytes, l.offset, *l.ptr, *l.expected, *l.replacement) <
+                   std::tie(r.type, r.bytes, r.offset, *r.ptr, *r.expected, *r.replacement);
+        }
 
-        case Expression::Id::AtomicWaitId:
-            WASM_UNREACHABLE(); // TODO:
+        case Expression::Id::AtomicWaitId: {
+            const auto &l = static_cast<const AtomicWait &>(lhs);
+            const auto &r = static_cast<const AtomicWait &>(rhs);
+            return std::tie(l.type, l.offset, *l.ptr, *l.expected, *l.timeout) <
+                   std::tie(r.type, r.offset, *r.ptr, *r.expected, *r.timeout);
+        }
 
-        case Expression::Id::AtomicWakeId:
-            WASM_UNREACHABLE(); // TODO:
+        case Expression::Id::AtomicWakeId: {
+            const auto &l = static_cast<const AtomicWake &>(lhs);
+            const auto &r = static_cast<const AtomicWake &>(rhs);
+            return std::tie(l.type, l.offset, *l.ptr, *l.wakeCount) < std::tie(r.type, r.offset, *r.ptr, *r.wakeCount);
+        }
 
         case Expression::Id::SIMDExtractId:
             WASM_UNREACHABLE(); // TODO:
