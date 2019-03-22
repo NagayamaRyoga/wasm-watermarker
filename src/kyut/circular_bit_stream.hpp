@@ -37,12 +37,16 @@ namespace kyut {
             return size_bytes() * 8;
         }
 
+        [[nodiscard]] std::size_t pos_bits() const noexcept {
+            return pos_bits_;
+        }
+
         bool read_bit() noexcept {
             if (size_bits() == 0) {
                 return false;
             }
 
-            const auto value = bytes_[pos_bits_ >> 3] >> (pos_bits_ & 0x7);
+            const auto value = (bytes_[pos_bits_ >> 3] >> (pos_bits_ & 0x7)) & 0x1;
 
             if (++pos_bits_ >= size_bits()) {
                 pos_bits_ = 0;
