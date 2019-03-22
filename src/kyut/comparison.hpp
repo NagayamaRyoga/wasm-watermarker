@@ -6,7 +6,10 @@
 #include <wasm.h>
 
 namespace wasm {
-    bool operator<(const Literal &lhs, const Literal &rhs) noexcept {
+    bool operator<(const Expression &lhs, const Expression &rhs) noexcept;
+    inline bool operator<(const ExpressionList &lhs, const ExpressionList &rhs) noexcept;
+
+    constexpr bool operator<(const Literal &lhs, const Literal &rhs) noexcept {
         if (lhs.type != rhs.type) {
             return lhs.type < rhs.type;
         }
@@ -36,39 +39,22 @@ namespace wasm {
         }
     }
 
-    bool operator<(const ExpressionList &lhs, const ExpressionList &rhs) noexcept {
-        auto lIt = lhs.begin();
-        auto lEnd = lhs.end();
-        auto rIt = rhs.begin();
-        auto rEnd = rhs.end();
-
-        for (; lIt != lEnd && rIt != rEnd; ++lIt, ++rIt) {
-            if (**lIt < **rIt) {
-                return true;
-            } else if (**rIt < **lIt) {
-                return false;
-            }
-        }
-
-        return !(lIt != lEnd) && rIt != rEnd;
-    }
-
-    bool operator<(const Expression &lhs, const Expression &rhs) noexcept {
+    inline bool operator<(const Expression &lhs, const Expression &rhs) noexcept {
         if (lhs._id != rhs._id) {
             return lhs._id < rhs._id;
         }
 
         switch (lhs._id) {
         case Expression::Id::BlockId: {
-            const auto &l = static_cast<const Block &>(lhs);
-            const auto &r = static_cast<const Block &>(rhs);
+            const auto &l = *lhs.cast<Block>();
+            const auto &r = *rhs.cast<Block>();
 
             return std::tie(l.type, l.list) < std::tie(r.type, r.list);
         }
 
         case Expression::Id::IfId: {
-            const auto &l = static_cast<const If &>(lhs);
-            const auto &r = static_cast<const If &>(rhs);
+            const auto &l = *lhs.cast<If>();
+            const auto &r = *rhs.cast<If>();
 
             if (std::tie(l.type, *l.condition, *l.ifTrue) < std::tie(r.type, *r.condition, *r.ifTrue)) {
                 return true;
@@ -90,8 +76,8 @@ namespace wasm {
         }
 
         case Expression::Id::LoopId: {
-            const auto &l = static_cast<const Loop &>(lhs);
-            const auto &r = static_cast<const Loop &>(rhs);
+            const auto &l = *lhs.cast<Loop>();
+            const auto &r = *rhs.cast<Loop>();
             return std::tie(l.type, *l.body) < std::tie(r.type, *r.body);
         }
 
@@ -102,89 +88,89 @@ namespace wasm {
             WASM_UNREACHABLE(); // TODO:
 
         case Expression::Id::CallId: {
-            const auto &l = static_cast<const Call &>(lhs);
-            const auto &r = static_cast<const Call &>(rhs);
+            const auto &l = *lhs.cast<Call>();
+            const auto &r = *rhs.cast<Call>();
             return std::tie(l.type, l.operands, l.target) < std::tie(r.type, r.operands, r.target);
         }
 
         case Expression::Id::CallIndirectId: {
-            const auto &l = static_cast<const CallIndirect &>(lhs);
-            const auto &r = static_cast<const CallIndirect &>(rhs);
+            const auto &l = *lhs.cast<CallIndirect>();
+            const auto &r = *rhs.cast<CallIndirect>();
             return std::tie(l.type, l.operands, *l.target) < std::tie(r.type, r.operands, *r.target);
         }
 
         case Expression::Id::GetLocalId: {
-            const auto &l = static_cast<const GetLocal &>(lhs);
-            const auto &r = static_cast<const GetLocal &>(rhs);
+            const auto &l = *lhs.cast<GetLocal>();
+            const auto &r = *rhs.cast<GetLocal>();
             return std::tie(l.type, l.index) < std::tie(r.type, r.index);
         }
 
         case Expression::Id::SetLocalId: {
-            const auto &l = static_cast<const SetLocal &>(lhs);
-            const auto &r = static_cast<const SetLocal &>(rhs);
+            const auto &l = *lhs.cast<SetLocal>();
+            const auto &r = *rhs.cast<SetLocal>();
             return std::tie(l.type, l.index, *l.value) < std::tie(r.type, r.index, *r.value);
         }
 
         case Expression::Id::GetGlobalId: {
-            const auto &l = static_cast<const GetGlobal &>(lhs);
-            const auto &r = static_cast<const GetGlobal &>(rhs);
+            const auto &l = *lhs.cast<GetGlobal>();
+            const auto &r = *rhs.cast<GetGlobal>();
             return std::tie(l.type, l.name) < std::tie(r.type, r.name);
         }
 
         case Expression::Id::SetGlobalId: {
-            const auto &l = static_cast<const SetGlobal &>(lhs);
-            const auto &r = static_cast<const SetGlobal &>(rhs);
+            const auto &l = *lhs.cast<SetGlobal>();
+            const auto &r = *rhs.cast<SetGlobal>();
             return std::tie(l.type, l.name, *l.value) < std::tie(r.type, r.name, *r.value);
         }
 
         case Expression::Id::LoadId: {
-            const auto &l = static_cast<const Load &>(lhs);
-            const auto &r = static_cast<const Load &>(rhs);
+            const auto &l = *lhs.cast<Load>();
+            const auto &r = *rhs.cast<Load>();
             return std::tie(l.type, l.bytes, l.signed_, l.offset, l.align, l.isAtomic, *l.ptr) <
                    std::tie(r.type, r.bytes, r.signed_, r.offset, r.align, r.isAtomic, *r.ptr);
         }
 
         case Expression::Id::StoreId: {
-            const auto &l = static_cast<const Store &>(lhs);
-            const auto &r = static_cast<const Store &>(rhs);
+            const auto &l = *lhs.cast<Store>();
+            const auto &r = *rhs.cast<Store>();
             return std::tie(l.type, l.bytes, l.offset, l.align, l.isAtomic, *l.ptr, *l.value) <
                    std::tie(r.type, r.bytes, r.offset, r.align, r.isAtomic, *r.ptr, *r.value);
         }
 
         case Expression::Id::ConstId: {
-            const auto &l = static_cast<const Const &>(lhs);
-            const auto &r = static_cast<const Const &>(rhs);
+            const auto &l = *lhs.cast<Const>();
+            const auto &r = *rhs.cast<Const>();
             return std::tie(l.type, l.value) < std::tie(r.type, r.value);
         }
 
         case Expression::Id::UnaryId: {
-            const auto &l = static_cast<const Unary &>(lhs);
-            const auto &r = static_cast<const Unary &>(rhs);
+            const auto &l = *lhs.cast<Unary>();
+            const auto &r = *rhs.cast<Unary>();
             return std::tie(l.type, *l.value) < std::tie(r.type, *r.value);
         }
 
         case Expression::Id::BinaryId: {
-            const auto &l = static_cast<const Binary &>(lhs);
-            const auto &r = static_cast<const Binary &>(rhs);
+            const auto &l = *lhs.cast<Binary>();
+            const auto &r = *rhs.cast<Binary>();
             return std::tie(l.type, *l.left, *l.right) < std::tie(r.type, *r.left, *r.right);
         }
 
         case Expression::Id::SelectId: {
-            const auto &l = static_cast<const Select &>(lhs);
-            const auto &r = static_cast<const Select &>(rhs);
+            const auto &l = *lhs.cast<Select>();
+            const auto &r = *rhs.cast<Select>();
             return std::tie(l.type, *l.condition, *l.ifTrue, *l.ifFalse) <
                    std::tie(r.type, *r.condition, *r.ifTrue, *r.ifFalse);
         }
 
         case Expression::Id::DropId: {
-            const auto &l = static_cast<const Drop &>(lhs);
-            const auto &r = static_cast<const Drop &>(rhs);
+            const auto &l = *lhs.cast<Drop>();
+            const auto &r = *rhs.cast<Drop>();
             return std::tie(l.type, *l.value) < std::tie(r.type, *r.value);
         }
 
         case Expression::Id::ReturnId: {
-            const auto &l = static_cast<const Return &>(lhs);
-            const auto &r = static_cast<const Return &>(rhs);
+            const auto &l = *lhs.cast<Return>();
+            const auto &r = *rhs.cast<Return>();
 
             if (l.type != r.type) {
                 return l.type < r.type;
@@ -205,29 +191,29 @@ namespace wasm {
             WASM_UNREACHABLE(); // TODO:
 
         case Expression::Id::AtomicRMWId: {
-            const auto &l = static_cast<const AtomicRMW &>(lhs);
-            const auto &r = static_cast<const AtomicRMW &>(rhs);
+            const auto &l = *lhs.cast<AtomicRMW>();
+            const auto &r = *rhs.cast<AtomicRMW>();
             return std::tie(l.type, l.op, l.bytes, l.offset, *l.ptr, *l.value) <
                    std::tie(r.type, r.op, r.bytes, r.offset, *r.ptr, *r.value);
         }
 
         case Expression::Id::AtomicCmpxchgId: {
-            const auto &l = static_cast<const AtomicCmpxchg &>(lhs);
-            const auto &r = static_cast<const AtomicCmpxchg &>(rhs);
+            const auto &l = *lhs.cast<AtomicCmpxchg>();
+            const auto &r = *rhs.cast<AtomicCmpxchg>();
             return std::tie(l.type, l.bytes, l.offset, *l.ptr, *l.expected, *l.replacement) <
                    std::tie(r.type, r.bytes, r.offset, *r.ptr, *r.expected, *r.replacement);
         }
 
         case Expression::Id::AtomicWaitId: {
-            const auto &l = static_cast<const AtomicWait &>(lhs);
-            const auto &r = static_cast<const AtomicWait &>(rhs);
+            const auto &l = *lhs.cast<AtomicWait>();
+            const auto &r = *rhs.cast<AtomicWait>();
             return std::tie(l.type, l.offset, *l.ptr, *l.expected, *l.timeout) <
                    std::tie(r.type, r.offset, *r.ptr, *r.expected, *r.timeout);
         }
 
         case Expression::Id::AtomicWakeId: {
-            const auto &l = static_cast<const AtomicWake &>(lhs);
-            const auto &r = static_cast<const AtomicWake &>(rhs);
+            const auto &l = *lhs.cast<AtomicWake>();
+            const auto &r = *rhs.cast<AtomicWake>();
             return std::tie(l.type, l.offset, *l.ptr, *l.wakeCount) < std::tie(r.type, r.offset, *r.ptr, *r.wakeCount);
         }
 
@@ -265,6 +251,23 @@ namespace wasm {
         default:
             WASM_UNREACHABLE();
         }
+    }
+
+    inline bool operator<(const ExpressionList &lhs, const ExpressionList &rhs) noexcept {
+        auto lIt = lhs.begin();
+        auto lEnd = lhs.end();
+        auto rIt = rhs.begin();
+        auto rEnd = rhs.end();
+
+        for (; lIt != lEnd && rIt != rEnd; ++lIt, ++rIt) {
+            if (**lIt < **rIt) {
+                return true;
+            } else if (**rIt < **lIt) {
+                return false;
+            }
+        }
+
+        return !(lIt != lEnd) && rIt != rEnd;
     }
 } // namespace wasm
 
