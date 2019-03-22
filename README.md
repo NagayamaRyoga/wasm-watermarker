@@ -1,6 +1,6 @@
 # Wasm Watermarker
 
-WebAssemblyに対する電子透かし埋め込み器
+WebAssembly に対する電子透かし埋め込み器
 
 ## 開発環境
 
@@ -10,7 +10,7 @@ OS: Ubuntu 18.04
 
 Compilers: GCC, Clang, emcc
 
-Libraries: Binaryen v72
+Libraries: Binaryen 1.38.30
 
 ## 命名規約
 
