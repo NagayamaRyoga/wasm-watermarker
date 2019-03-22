@@ -333,20 +333,10 @@ namespace wasm {
     }
 
     inline bool operator<(const ExpressionList &lhs, const ExpressionList &rhs) noexcept {
-        auto lIt = lhs.begin();
-        auto lEnd = lhs.end();
-        auto rIt = rhs.begin();
-        auto rEnd = rhs.end();
-
-        for (; lIt != lEnd && rIt != rEnd; ++lIt, ++rIt) {
-            if (**lIt < **rIt) {
-                return true;
-            } else if (**rIt < **lIt) {
-                return false;
-            }
-        }
-
-        return !(lIt != lEnd) && rIt != rEnd;
+        return std::lexicographical_compare(
+            std::begin(lhs), std::end(lhs), std::begin(rhs), std::end(rhs), [](const auto &a, const auto &b) {
+                return *a < *b;
+            });
     }
 } // namespace wasm
 
