@@ -2,11 +2,15 @@
 
 #include <pass.h>
 
+#include "../commutativity.hpp"
+#include "../comparison.hpp"
+
 namespace kyut::pass {
     class OperandSwappingWatermarkingVisitor
         : public wasm::OverriddenVisitor<OperandSwappingWatermarkingVisitor, bool> {
     public:
-        explicit OperandSwappingWatermarkingVisitor() = default;
+        explicit OperandSwappingWatermarkingVisitor(CircularBitStream &stream)
+            : stream_(stream) {}
 
         OperandSwappingWatermarkingVisitor(const OperandSwappingWatermarkingVisitor &) = delete;
         OperandSwappingWatermarkingVisitor(OperandSwappingWatermarkingVisitor &&) = delete;
@@ -217,6 +221,14 @@ namespace kyut::pass {
             has_side_effect = visit(curr->left) || has_side_effect;
             has_side_effect = visit(curr->right) || has_side_effect;
 
+            if (isCommutative(curr->op) && !has_side_effect) {
+                const auto bit = stream_.read_bit();
+
+                if (bit == (*curr->left < *curr->right)) {
+                    swapOperands(*curr);
+                }
+            }
+
             return has_side_effect;
         }
 
@@ -278,11 +290,15 @@ namespace kyut::pass {
         bool visitModule([[maybe_unused]] wasm::Module *curr) {
             WASM_UNREACHABLE();
         }
+
+    private:
+        CircularBitStream &stream_;
     };
 
     class OperandSwappingWatermarkingPass : public wasm::Pass {
     public:
-        explicit OperandSwappingWatermarkingPass() = default;
+        explicit OperandSwappingWatermarkingPass(CircularBitStream &stream)
+            : stream_(stream) {}
 
         OperandSwappingWatermarkingPass(const OperandSwappingWatermarkingPass &) = delete;
         OperandSwappingWatermarkingPass(OperandSwappingWatermarkingPass &&) = delete;
@@ -297,17 +313,20 @@ namespace kyut::pass {
         }
 
         void run([[maybe_unused]] wasm::PassRunner *runner, wasm::Module *module) override {
-            OperandSwappingWatermarkingVisitor visitor{};
+            OperandSwappingWatermarkingVisitor visitor{stream_};
 
             for (const auto &func : module->functions) {
                 visitor.visit(func->body);
             }
         }
+
+    private:
+        CircularBitStream &stream_;
     };
 
-    void embedWatermarkOperandSwapping(wasm::Module &module) {
+    void embedWatermarkOperandSwapping(wasm::Module &module, CircularBitStream &stream) {
         wasm::PassRunner runner{&module};
-        runner.add<OperandSwappingWatermarkingPass>();
+        runner.add<OperandSwappingWatermarkingPass>(std::ref(stream));
         runner.run();
     }
 } // namespace kyut::pass
