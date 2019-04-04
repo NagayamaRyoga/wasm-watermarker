@@ -261,10 +261,11 @@ namespace wasm {
                    std::tie(r.type, r.offset, *r.ptr, *r.expected, *r.timeout);
         }
 
-        case Expression::Id::AtomicWakeId: {
-            const auto &l = *lhs.cast<AtomicWake>();
-            const auto &r = *rhs.cast<AtomicWake>();
-            return std::tie(l.type, l.offset, *l.ptr, *l.wakeCount) < std::tie(r.type, r.offset, *r.ptr, *r.wakeCount);
+        case Expression::Id::AtomicNotifyId: {
+            const auto &l = *lhs.cast<AtomicNotify>();
+            const auto &r = *rhs.cast<AtomicNotify>();
+            return std::tie(l.type, l.offset, *l.ptr, *l.notifyCount) <
+                   std::tie(r.type, r.offset, *r.ptr, *r.notifyCount);
         }
 
         case Expression::Id::SIMDExtractId: {
@@ -333,20 +334,10 @@ namespace wasm {
     }
 
     inline bool operator<(const ExpressionList &lhs, const ExpressionList &rhs) noexcept {
-        auto lIt = lhs.begin();
-        auto lEnd = lhs.end();
-        auto rIt = rhs.begin();
-        auto rEnd = rhs.end();
-
-        for (; lIt != lEnd && rIt != rEnd; ++lIt, ++rIt) {
-            if (**lIt < **rIt) {
-                return true;
-            } else if (**rIt < **lIt) {
-                return false;
-            }
-        }
-
-        return !(lIt != lEnd) && rIt != rEnd;
+        return std::lexicographical_compare(
+            std::begin(lhs), std::end(lhs), std::begin(rhs), std::end(rhs), [](const auto &a, const auto &b) {
+                return *a < *b;
+            });
     }
 } // namespace wasm
 

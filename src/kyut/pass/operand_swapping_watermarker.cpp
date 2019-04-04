@@ -135,9 +135,9 @@ namespace kyut::pass {
             return true;
         }
 
-        bool visitAtomicWake(wasm::AtomicWake *curr) {
+        bool visitAtomicNotify(wasm::AtomicNotify *curr) {
             visit(curr->ptr);
-            visit(curr->wakeCount);
+            visit(curr->notifyCount);
             return true;
         }
 
