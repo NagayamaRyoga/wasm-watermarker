@@ -261,10 +261,11 @@ namespace wasm {
                    std::tie(r.type, r.offset, *r.ptr, *r.expected, *r.timeout);
         }
 
-        case Expression::Id::AtomicWakeId: {
-            const auto &l = *lhs.cast<AtomicWake>();
-            const auto &r = *rhs.cast<AtomicWake>();
-            return std::tie(l.type, l.offset, *l.ptr, *l.wakeCount) < std::tie(r.type, r.offset, *r.ptr, *r.wakeCount);
+        case Expression::Id::AtomicNotifyId: {
+            const auto &l = *lhs.cast<AtomicNotify>();
+            const auto &r = *rhs.cast<AtomicNotify>();
+            return std::tie(l.type, l.offset, *l.ptr, *l.notifyCount) <
+                   std::tie(r.type, r.offset, *r.ptr, *r.notifyCount);
         }
 
         case Expression::Id::SIMDExtractId: {
