@@ -4,10 +4,11 @@
 
 #include "../commutativity.hpp"
 #include "../comparison.hpp"
+#include "../side_effect.hpp"
 
 namespace kyut::pass {
     class OperandSwappingWatermarkingVisitor
-        : public wasm::OverriddenVisitor<OperandSwappingWatermarkingVisitor, bool> {
+        : public wasm::OverriddenVisitor<OperandSwappingWatermarkingVisitor, SideEffect> {
     public:
         explicit OperandSwappingWatermarkingVisitor(CircularBitStream &stream)
             : stream_(stream) {}
@@ -20,34 +21,34 @@ namespace kyut::pass {
 
         ~OperandSwappingWatermarkingVisitor() noexcept = default;
 
-        bool visitBlock(wasm::Block *curr) {
-            bool has_side_effect = false;
+        SideEffect visitBlock(wasm::Block *curr) {
+            auto side_effect = SideEffect::none;
 
             for (const auto &expr : curr->list) {
-                has_side_effect = visit(expr) || has_side_effect;
+                side_effect = (std::max)(visit(expr), side_effect);
             }
 
-            return has_side_effect;
+            return side_effect;
         }
 
-        bool visitIf(wasm::If *curr) {
-            bool has_side_effect = false;
+        SideEffect visitIf(wasm::If *curr) {
+            auto side_effect = SideEffect::none;
 
-            has_side_effect = visit(curr->condition) || has_side_effect;
-            has_side_effect = visit(curr->ifTrue) || has_side_effect;
+            side_effect = (std::max)(visit(curr->condition), side_effect);
+            side_effect = (std::max)(visit(curr->ifTrue), side_effect);
 
             if (curr->ifFalse) {
-                has_side_effect = visit(curr->ifFalse) || has_side_effect;
+                side_effect = (std::max)(visit(curr->ifFalse), side_effect);
             }
 
-            return has_side_effect;
+            return side_effect;
         }
 
-        bool visitLoop(wasm::Loop *curr) {
+        SideEffect visitLoop(wasm::Loop *curr) {
             return visit(curr->body);
         }
 
-        bool visitBreak(wasm::Break *curr) {
+        SideEffect visitBreak(wasm::Break *curr) {
             if (curr->condition) {
                 visit(curr->condition);
             }
@@ -56,172 +57,174 @@ namespace kyut::pass {
                 visit(curr->value);
             }
 
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitSwitch(wasm::Switch *curr) {
+        SideEffect visitSwitch(wasm::Switch *curr) {
             visit(curr->condition);
 
             if (curr->value) {
                 visit(curr->value);
             }
 
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitCall(wasm::Call *curr) {
+        SideEffect visitCall(wasm::Call *curr) {
             for (const auto &expr : curr->operands) {
                 visit(expr);
             }
 
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitCallIndirect(wasm::CallIndirect *curr) {
+        SideEffect visitCallIndirect(wasm::CallIndirect *curr) {
             visit(curr->target);
 
             for (const auto &expr : curr->operands) {
                 visit(expr);
             }
 
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitGetLocal([[maybe_unused]] wasm::GetLocal *curr) {
-            return false;
+        SideEffect visitGetLocal([[maybe_unused]] wasm::GetLocal *curr) {
+            return SideEffect::read;
         }
 
-        bool visitSetLocal(wasm::SetLocal *curr) {
+        SideEffect visitSetLocal(wasm::SetLocal *curr) {
             visit(curr->value);
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitGetGlobal([[maybe_unused]] wasm::GetGlobal *curr) {
-            return false;
+        SideEffect visitGetGlobal([[maybe_unused]] wasm::GetGlobal *curr) {
+            return SideEffect::read;
         }
 
-        bool visitSetGlobal(wasm::SetGlobal *curr) {
+        SideEffect visitSetGlobal(wasm::SetGlobal *curr) {
             visit(curr->value);
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitLoad(wasm::Load *curr) {
-            return visit(curr->ptr);
+        SideEffect visitLoad(wasm::Load *curr) {
+            return (std::max)(visit(curr->ptr), SideEffect::read);
         }
 
-        bool visitStore(wasm::Store *curr) {
+        SideEffect visitStore(wasm::Store *curr) {
             visit(curr->ptr);
             visit(curr->value);
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitAtomicRMW(wasm::AtomicRMW *curr) {
+        SideEffect visitAtomicRMW(wasm::AtomicRMW *curr) {
             visit(curr->ptr);
             visit(curr->value);
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitAtomicCmpxchg(wasm::AtomicCmpxchg *curr) {
+        SideEffect visitAtomicCmpxchg(wasm::AtomicCmpxchg *curr) {
             visit(curr->ptr);
             visit(curr->expected);
             visit(curr->replacement);
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitAtomicWait(wasm::AtomicWait *curr) {
+        SideEffect visitAtomicWait(wasm::AtomicWait *curr) {
             visit(curr->ptr);
             visit(curr->expected);
             visit(curr->timeout);
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitAtomicNotify(wasm::AtomicNotify *curr) {
+        SideEffect visitAtomicNotify(wasm::AtomicNotify *curr) {
             visit(curr->ptr);
             visit(curr->notifyCount);
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitSIMDExtract(wasm::SIMDExtract *curr) {
+        SideEffect visitSIMDExtract(wasm::SIMDExtract *curr) {
             return visit(curr->vec);
         }
 
-        bool visitSIMDReplace(wasm::SIMDReplace *curr) {
-            bool has_side_effect = false;
+        SideEffect visitSIMDReplace(wasm::SIMDReplace *curr) {
+            auto side_effect = SideEffect::none;
 
-            has_side_effect = visit(curr->vec) || has_side_effect;
-            has_side_effect = visit(curr->value) || has_side_effect;
+            side_effect = (std::max)(visit(curr->vec), side_effect);
+            side_effect = (std::max)(visit(curr->value), side_effect);
 
-            return has_side_effect;
+            return side_effect;
         }
 
-        bool visitSIMDShuffle(wasm::SIMDShuffle *curr) {
-            bool has_side_effect = false;
+        SideEffect visitSIMDShuffle(wasm::SIMDShuffle *curr) {
+            auto side_effect = SideEffect::none;
 
-            has_side_effect = visit(curr->left) || has_side_effect;
-            has_side_effect = visit(curr->right) || has_side_effect;
+            side_effect = (std::max)(visit(curr->left), side_effect);
+            side_effect = (std::max)(visit(curr->right), side_effect);
 
-            return has_side_effect;
+            return side_effect;
         }
 
-        bool visitSIMDBitselect(wasm::SIMDBitselect *curr) {
-            bool has_side_effect = false;
+        SideEffect visitSIMDBitselect(wasm::SIMDBitselect *curr) {
+            auto side_effect = SideEffect::none;
 
-            has_side_effect = visit(curr->cond) || has_side_effect;
-            has_side_effect = visit(curr->left) || has_side_effect;
-            has_side_effect = visit(curr->right) || has_side_effect;
+            side_effect = (std::max)(visit(curr->cond), side_effect);
+            side_effect = (std::max)(visit(curr->left), side_effect);
+            side_effect = (std::max)(visit(curr->right), side_effect);
 
-            return has_side_effect;
+            return side_effect;
         }
 
-        bool visitSIMDShift(wasm::SIMDShift *curr) {
-            bool has_side_effect = false;
+        SideEffect visitSIMDShift(wasm::SIMDShift *curr) {
+            auto side_effect = SideEffect::none;
 
-            has_side_effect = visit(curr->vec) || has_side_effect;
-            has_side_effect = visit(curr->shift) || has_side_effect;
+            side_effect = (std::max)(visit(curr->vec), side_effect);
+            side_effect = (std::max)(visit(curr->shift), side_effect);
 
-            return has_side_effect;
+            return side_effect;
         }
 
-        bool visitMemoryInit(wasm::MemoryInit *curr) {
+        SideEffect visitMemoryInit(wasm::MemoryInit *curr) {
             visit(curr->dest);
             visit(curr->offset);
             visit(curr->size);
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitDataDrop([[maybe_unused]] wasm::DataDrop *curr) {
-            return true;
+        SideEffect visitDataDrop([[maybe_unused]] wasm::DataDrop *curr) {
+            return SideEffect::write;
         }
 
-        bool visitMemoryCopy(wasm::MemoryCopy *curr) {
+        SideEffect visitMemoryCopy(wasm::MemoryCopy *curr) {
             visit(curr->dest);
             visit(curr->source);
             visit(curr->size);
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitMemoryFill(wasm::MemoryFill *curr) {
+        SideEffect visitMemoryFill(wasm::MemoryFill *curr) {
             visit(curr->dest);
             visit(curr->value);
             visit(curr->size);
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitConst([[maybe_unused]] wasm::Const *curr) {
-            return false;
+        SideEffect visitConst([[maybe_unused]] wasm::Const *curr) {
+            return SideEffect::none;
         }
 
-        bool visitUnary(wasm::Unary *curr) {
+        SideEffect visitUnary(wasm::Unary *curr) {
             return visit(curr->value);
         }
 
-        bool visitBinary(wasm::Binary *curr) {
-            bool has_side_effect = false;
+        SideEffect visitBinary(wasm::Binary *curr) {
+            auto side_effect_left = visit(curr->left);
+            auto side_effect_right = visit(curr->right);
 
-            has_side_effect = visit(curr->left) || has_side_effect;
-            has_side_effect = visit(curr->right) || has_side_effect;
+            // operands can be swapped if [write(=2), none(=0)] or [read(=1), read(=1)]
+            auto can_swap_operands =
+                (static_cast<std::int32_t>(side_effect_left) + static_cast<std::int32_t>(side_effect_left) <= 2);
 
-            if (isCommutative(curr->op) && !has_side_effect) {
+            if (isCommutative(curr->op) && can_swap_operands) {
                 const auto bit = stream_.read_bit();
 
                 if (bit == (*curr->left < *curr->right)) {
@@ -229,65 +232,69 @@ namespace kyut::pass {
                 }
             }
 
-            return has_side_effect;
+            return (std::max)(side_effect_left, side_effect_right);
         }
 
-        bool visitSelect(wasm::Select *curr) {
-            bool has_side_effect = false;
+        SideEffect visitSelect(wasm::Select *curr) {
+            auto side_effect = SideEffect::none;
 
-            has_side_effect = visit(curr->condition) || has_side_effect;
-            has_side_effect = visit(curr->ifTrue) || has_side_effect;
-            has_side_effect = visit(curr->ifFalse) || has_side_effect;
+            side_effect = (std::max)(visit(curr->condition), side_effect);
+            side_effect = (std::max)(visit(curr->ifTrue), side_effect);
+            side_effect = (std::max)(visit(curr->ifFalse), side_effect);
 
-            return has_side_effect;
+            return side_effect;
         }
 
-        bool visitDrop(wasm::Drop *curr) {
+        SideEffect visitDrop(wasm::Drop *curr) {
             return visit(curr->value);
         }
 
-        bool visitReturn(wasm::Return *curr) {
+        SideEffect visitReturn(wasm::Return *curr) {
             if (curr->value) {
                 visit(curr->value);
             }
 
-            return true;
+            return SideEffect::write;
         }
 
-        bool visitHost(wasm::Host *curr) {
+        SideEffect visitHost(wasm::Host *curr) {
             for (const auto &expr : curr->operands) {
                 visit(expr);
             }
 
-            return curr->op != wasm::HostOp::CurrentMemory;
+            if (curr->op == wasm::HostOp::CurrentMemory) {
+                return SideEffect::read;
+            } else {
+                return SideEffect::write;
+            }
         }
 
-        bool visitNop([[maybe_unused]] wasm::Nop *curr) {
-            return false;
+        SideEffect visitNop([[maybe_unused]] wasm::Nop *curr) {
+            return SideEffect::none;
         }
 
-        bool visitUnreachable([[maybe_unused]] wasm::Unreachable *curr) {
+        SideEffect visitUnreachable([[maybe_unused]] wasm::Unreachable *curr) {
             WASM_UNREACHABLE();
         }
-        bool visitFunctionType([[maybe_unused]] wasm::FunctionType *curr) {
+        SideEffect visitFunctionType([[maybe_unused]] wasm::FunctionType *curr) {
             WASM_UNREACHABLE();
         }
-        bool visitExport([[maybe_unused]] wasm::Export *curr) {
+        SideEffect visitExport([[maybe_unused]] wasm::Export *curr) {
             WASM_UNREACHABLE();
         }
-        bool visitGlobal([[maybe_unused]] wasm::Global *curr) {
+        SideEffect visitGlobal([[maybe_unused]] wasm::Global *curr) {
             WASM_UNREACHABLE();
         }
-        bool visitFunction([[maybe_unused]] wasm::Function *curr) {
+        SideEffect visitFunction([[maybe_unused]] wasm::Function *curr) {
             WASM_UNREACHABLE();
         }
-        bool visitTable([[maybe_unused]] wasm::Table *curr) {
+        SideEffect visitTable([[maybe_unused]] wasm::Table *curr) {
             WASM_UNREACHABLE();
         }
-        bool visitMemory([[maybe_unused]] wasm::Memory *curr) {
+        SideEffect visitMemory([[maybe_unused]] wasm::Memory *curr) {
             WASM_UNREACHABLE();
         }
-        bool visitModule([[maybe_unused]] wasm::Module *curr) {
+        SideEffect visitModule([[maybe_unused]] wasm::Module *curr) {
             WASM_UNREACHABLE();
         }
 
