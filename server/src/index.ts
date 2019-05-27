@@ -12,19 +12,16 @@ const server = app.listen(port, () => {
     console.log(`server listening at port ${port}`);
 });
 
-app.get(
-    "/wasm/add.wasm",
-    async (req: express.Request, res: express.Response) => {
-        const path = `${__dirname}/../wasm/add.wasm`;
-        const watermark = req.query.v || "";
+app.get("/add.wasm", async (req: express.Request, res: express.Response) => {
+    const path = `${__dirname}/../wasm/add.wasm`;
+    const watermark = req.query.v || "";
 
-        res.writeHead(200, { "Content-Type": "application/wasm" });
+    res.writeHead(200, { "Content-Type": "application/wasm" });
 
-        console.time("kyut");
-        const process = childProcess.spawn(watermarker, [path, watermark, "-"]);
-        process.stdout.pipe(res);
-        res.on("finish", () => console.timeEnd("kyut"));
-    }
-);
+    console.time("kyut");
+    const process = childProcess.spawn(watermarker, [path, watermark, "-"]);
+    process.stdout.pipe(res);
+    res.on("finish", () => console.timeEnd("kyut"));
+});
 
 app.use(express.static(`${__dirname}/../static`));

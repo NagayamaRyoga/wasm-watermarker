@@ -18,7 +18,7 @@
             (async () => {
                 // Import wasm module
                 const wasm = await WebAssembly.instantiateStreaming(
-                    fetch("wasm/add.wasm")
+                    fetch("add.wasm")
                 );
 
                 const { add2, add3 } = wasm.instance.exports;
