@@ -15,14 +15,22 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        wasm::Module module;
-        wasm::ModuleReader{}.read(argv[1], module);
+        const std::string inputFile = argv[1];
+        const std::string watermark = argv[2];
+        const std::string outputFile = argv[3];
 
-        const auto stream = kyut::CircularBitStream::from_string(argv[2]);
+        wasm::Module module;
+        wasm::ModuleReader{}.read(inputFile, module);
+
+        const auto stream = kyut::CircularBitStream::from_string(watermark);
 
         kyut::pass::embedWatermarkOperandSwapping(module, *stream);
 
-        wasm::ModuleWriter{}.write(module, argv[3]);
+        if (outputFile == "-") {
+            wasm::ModuleWriter{}.writeBinary(module, "");
+        } else {
+            wasm::ModuleWriter{}.write(module, outputFile);
+        }
     } catch (wasm::ParseException &e) {
         fmt::print(std::cerr, "parse error\n");
         e.dump(std::cerr);
