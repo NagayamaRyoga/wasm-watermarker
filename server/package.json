@@ -1,0 +1,16 @@
+{
+    "name": "wasm-watermark-server",
+    "version": "1.0.0",
+    "description": "A WebAssembly Watermarking Server",
+    "main": "index.js",
+    "scripts": {},
+    "repository": {
+        "type": "git",
+        "url": "git@github.com/NagayamaRyoga/wasm-watermark.git"
+    },
+    "keywords": [
+        "wasm"
+    ],
+    "author": "NagayamaRyoga",
+    "license": "GPL-3.0"
+}
