@@ -12,7 +12,7 @@ const server = app.listen(port, () => {
 app.get("/wasm/add.wasm", (req: express.Request, res: express.Response) => {
     const binary = fs.readFileSync(`${__dirname}/../wasm/add.wasm`);
 
-    res.writeHead(200, { contentType: "application/wasm" });
+    res.writeHead(200, { "Content-Type": "application/wasm" });
     res.end(binary);
 });
 
