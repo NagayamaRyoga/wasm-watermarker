@@ -6,17 +6,33 @@
         <title>Watermark Server</title>
     </head>
     <body>
-        <h1>Watermark Server</h1>
+        <div id="root">
+            <h1>Watermark Server</h1>
+
+            <p>add2(42, 88) = {{ result1 }}</p>
+            <p>add3(42, 88, 64) = {{ result2 }}</p>
+        </div>
+
+        <script src="https://unpkg.com/vue"></script>
         <script>
             (async () => {
+                // Import wasm module
                 const wasm = await WebAssembly.instantiateStreaming(
                     fetch("wasm/add.wasm")
                 );
 
                 const { add2, add3 } = wasm.instance.exports;
 
-                console.log(add2(42, 88));
-                console.log(add3(42, 88, 64));
+                // Mount vue
+                const data = {
+                    result1: add2(42, 88),
+                    result2: add3(42, 88, 64)
+                };
+
+                const app = new Vue({
+                    el: "#root",
+                    data
+                });
             })();
         </script>
     </body>
