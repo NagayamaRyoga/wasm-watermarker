@@ -32,6 +32,6 @@ $ make
 ## 実行方法
 
 ```shell
-$ kyut <input-wasm> <watermark>
+$ snpi <input-wasm> <watermark>
 $ pisn <input-wasm>
 ```
