@@ -141,8 +141,8 @@ namespace wasm {
             const auto &l = *lhs.cast<Load>();
             const auto &r = *rhs.cast<Load>();
 
-            return std::forward_as_tuple(l.type, l.bytes, l.signed_, l.offset, l.align, l.isAtomic, *l.ptr) <
-                   std::forward_as_tuple(r.type, r.bytes, r.signed_, r.offset, r.align, r.isAtomic, *r.ptr);
+            return std::forward_as_tuple(l.type, l.bytes, l.offset, l.align, l.isAtomic, *l.ptr) <
+                   std::forward_as_tuple(r.type, r.bytes, r.offset, r.align, r.isAtomic, *r.ptr);
         }
 
         case Expression::Id::StoreId: {
