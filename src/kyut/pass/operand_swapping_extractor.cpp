@@ -68,7 +68,9 @@ namespace kyut::pass {
             OperandSwappingExtractingVisitor visitor{writer_};
 
             for (const auto &func : module->functions) {
-                visitor.visit(func->body);
+                if (func->body) {
+                    visitor.visit(func->body);
+                }
             }
         }
 
