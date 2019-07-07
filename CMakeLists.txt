@@ -13,12 +13,14 @@ if (NOT CMAKE_BUILD_TYPE)
 endif (NOT CMAKE_BUILD_TYPE)
 
 find_package(Threads REQUIRED)
+find_package(Boost REQUIRED)
 
 include(ExternalProject)
 include(cmake/binaryen.cmake)
 include(cmake/fmt.cmake)
 
 include_directories(
+    ${Boost_INCLUDE_DIR}
     src
 )
 

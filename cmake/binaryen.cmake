@@ -1,6 +1,6 @@
 ExternalProject_Add(
     binaryen
-    URL https://github.com/WebAssembly/binaryen/archive/91704fbae74fa7c89a017764eaa5ff03eda5ec0d.tar.gz
+    URL https://github.com/WebAssembly/binaryen/archive/1.38.32.tar.gz
     PREFIX binaryen
     INSTALL_COMMAND ""
     TEST_COMMAND ""
