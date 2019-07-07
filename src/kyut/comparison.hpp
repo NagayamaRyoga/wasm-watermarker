@@ -3,11 +3,13 @@
 
 #include <tuple>
 
+#include <boost/optional.hpp> // boost::optional is more useful than std::optional
+
 #include <wasm.h>
 
 namespace wasm {
     bool operator<(const Expression &lhs, const Expression &rhs) noexcept;
-    inline bool operator<(const ExpressionList &lhs, const ExpressionList &rhs) noexcept;
+    bool operator<(const ExpressionList &lhs, const ExpressionList &rhs) noexcept;
 
     constexpr bool operator<(const Literal &lhs, const Literal &rhs) noexcept {
         if (lhs.type != rhs.type) {
@@ -17,6 +19,7 @@ namespace wasm {
         switch (lhs.type) {
         case Type::none:
         case Type::unreachable:
+        case Type::except_ref:
             return false;
 
         case Type::i32:
@@ -40,6 +43,13 @@ namespace wasm {
     }
 
     inline bool operator<(const Expression &lhs, const Expression &rhs) noexcept {
+        constexpr auto opt = [](const Expression *p) -> boost::optional<const Expression &> {
+            if (p) {
+                return {*p};
+            }
+            return boost::none;
+        };
+
         if (lhs._id != rhs._id) {
             return lhs._id < rhs._id;
         }
@@ -49,279 +59,252 @@ namespace wasm {
             const auto &l = *lhs.cast<Block>();
             const auto &r = *rhs.cast<Block>();
 
-            return std::tie(l.type, l.list) < std::tie(r.type, r.list);
+            return std::forward_as_tuple(l.type, l.list) < std::forward_as_tuple(r.type, r.list);
         }
 
         case Expression::Id::IfId: {
             const auto &l = *lhs.cast<If>();
             const auto &r = *rhs.cast<If>();
 
-            if (std::tie(l.type, *l.condition, *l.ifTrue) < std::tie(r.type, *r.condition, *r.ifTrue)) {
-                return true;
-            } else if (std::tie(r.type, *r.condition, *r.ifTrue) < std::tie(l.type, *l.condition, *l.ifTrue)) {
-                return false;
-            }
-
-            if (r.ifFalse == nullptr) {
-                return false;
-            } else if (l.ifFalse == nullptr) {
-                return true;
-            }
-
-            return *l.ifFalse < *r.ifFalse;
+            return std::forward_as_tuple(l.type, *l.condition, *l.ifTrue, opt(l.ifFalse)) <
+                   std::forward_as_tuple(r.type, *r.condition, *r.ifTrue, opt(r.ifFalse));
         }
 
         case Expression::Id::LoopId: {
             const auto &l = *lhs.cast<Loop>();
             const auto &r = *rhs.cast<Loop>();
-            return std::tie(l.type, *l.body) < std::tie(r.type, *r.body);
+
+            return std::forward_as_tuple(l.type, *l.body) < std::forward_as_tuple(r.type, *r.body);
         }
 
         case Expression::Id::BreakId: {
             const auto &l = *lhs.cast<Break>();
             const auto &r = *rhs.cast<Break>();
 
-            if (l.type != r.type) {
-                return l.type < r.type;
-            }
-
-            if (l.value != nullptr && r.value == nullptr) {
-                return false;
-            } else if (l.value == nullptr && r.value != nullptr) {
-                return true;
-            } else if (l.value != nullptr && r.value != nullptr) {
-                if (*l.value < *r.value) {
-                    return true;
-                } else if (*r.value < *l.value) {
-                    return false;
-                }
-            }
-
-            if (l.condition != nullptr && r.condition == nullptr) {
-                return false;
-            } else if (l.condition == nullptr && r.condition != nullptr) {
-                return true;
-            } else if (l.condition != nullptr && r.condition != nullptr) {
-                return std::tie(*l.condition, l.name) < std::tie(*r.condition, r.name);
-            }
-
-            return l.name < r.name;
+            return std::forward_as_tuple(l.type, opt(l.value), opt(l.condition)) <
+                   std::forward_as_tuple(r.type, opt(r.value), opt(r.condition));
         }
 
         case Expression::Id::SwitchId: {
             const auto &l = *lhs.cast<Switch>();
             const auto &r = *rhs.cast<Switch>();
 
-            if (l.type != r.type) {
-                return l.type < r.type;
-            }
-
-            if (*l.condition < *r.condition) {
-                return true;
-            } else if (*r.condition < *l.condition) {
-                return false;
-            }
-
-            if (l.value == nullptr && r.value == nullptr) {
-                return l.default_ < r.default_;
-            }
-
-            if (l.value == nullptr) {
-                return true;
-            } else if (r.value == nullptr) {
-                return false;
-            }
-
-            return std::tie(l.default_, *l.value) < std::tie(r.default_, *r.value);
+            return std::forward_as_tuple(l.type, opt(l.condition), opt(l.value)) <
+                   std::forward_as_tuple(r.type, opt(r.condition), opt(r.value));
         }
 
         case Expression::Id::CallId: {
             const auto &l = *lhs.cast<Call>();
             const auto &r = *rhs.cast<Call>();
-            return std::tie(l.type, l.operands, l.target) < std::tie(r.type, r.operands, r.target);
+
+            return std::forward_as_tuple(l.type, l.operands, l.target) <
+                   std::forward_as_tuple(r.type, r.operands, r.target);
         }
 
         case Expression::Id::CallIndirectId: {
             const auto &l = *lhs.cast<CallIndirect>();
             const auto &r = *rhs.cast<CallIndirect>();
-            return std::tie(l.type, l.operands, *l.target) < std::tie(r.type, r.operands, *r.target);
+
+            return std::forward_as_tuple(l.type, l.operands, *l.target) <
+                   std::forward_as_tuple(r.type, r.operands, *r.target);
         }
 
         case Expression::Id::GetLocalId: {
             const auto &l = *lhs.cast<GetLocal>();
             const auto &r = *rhs.cast<GetLocal>();
-            return std::tie(l.type, l.index) < std::tie(r.type, r.index);
+
+            return std::forward_as_tuple(l.type, l.index) < std::forward_as_tuple(r.type, r.index);
         }
 
         case Expression::Id::SetLocalId: {
             const auto &l = *lhs.cast<SetLocal>();
             const auto &r = *rhs.cast<SetLocal>();
-            return std::tie(l.type, l.index, *l.value) < std::tie(r.type, r.index, *r.value);
+
+            return std::forward_as_tuple(l.type, l.index, *l.value) < std::forward_as_tuple(r.type, r.index, *r.value);
         }
 
         case Expression::Id::GetGlobalId: {
             const auto &l = *lhs.cast<GetGlobal>();
             const auto &r = *rhs.cast<GetGlobal>();
-            return std::tie(l.type, l.name) < std::tie(r.type, r.name);
+
+            return std::forward_as_tuple(l.type, l.name) < std::forward_as_tuple(r.type, r.name);
         }
 
         case Expression::Id::SetGlobalId: {
             const auto &l = *lhs.cast<SetGlobal>();
             const auto &r = *rhs.cast<SetGlobal>();
-            return std::tie(l.type, l.name, *l.value) < std::tie(r.type, r.name, *r.value);
+
+            return std::forward_as_tuple(l.type, l.name, *l.value) < std::forward_as_tuple(r.type, r.name, *r.value);
         }
 
         case Expression::Id::LoadId: {
             const auto &l = *lhs.cast<Load>();
             const auto &r = *rhs.cast<Load>();
-            return std::tie(l.type, l.bytes, l.signed_, l.offset, l.align, l.isAtomic, *l.ptr) <
-                   std::tie(r.type, r.bytes, r.signed_, r.offset, r.align, r.isAtomic, *r.ptr);
+
+            return std::forward_as_tuple(l.type, l.bytes, l.signed_, l.offset, l.align, l.isAtomic, *l.ptr) <
+                   std::forward_as_tuple(r.type, r.bytes, r.signed_, r.offset, r.align, r.isAtomic, *r.ptr);
         }
 
         case Expression::Id::StoreId: {
             const auto &l = *lhs.cast<Store>();
             const auto &r = *rhs.cast<Store>();
-            return std::tie(l.type, l.bytes, l.offset, l.align, l.isAtomic, *l.ptr, *l.value) <
-                   std::tie(r.type, r.bytes, r.offset, r.align, r.isAtomic, *r.ptr, *r.value);
+
+            return std::forward_as_tuple(l.type, l.bytes, l.offset, l.align, l.isAtomic, *l.ptr, *l.value) <
+                   std::forward_as_tuple(r.type, r.bytes, r.offset, r.align, r.isAtomic, *r.ptr, *r.value);
         }
 
         case Expression::Id::ConstId: {
             const auto &l = *lhs.cast<Const>();
             const auto &r = *rhs.cast<Const>();
-            return std::tie(l.type, l.value) < std::tie(r.type, r.value);
+
+            return std::forward_as_tuple(l.type, l.value) < std::forward_as_tuple(r.type, r.value);
         }
 
         case Expression::Id::UnaryId: {
             const auto &l = *lhs.cast<Unary>();
             const auto &r = *rhs.cast<Unary>();
-            return std::tie(l.type, *l.value) < std::tie(r.type, *r.value);
+
+            return std::forward_as_tuple(l.type, *l.value) < std::forward_as_tuple(r.type, *r.value);
         }
 
         case Expression::Id::BinaryId: {
             const auto &l = *lhs.cast<Binary>();
             const auto &r = *rhs.cast<Binary>();
-            return std::tie(l.type, *l.left, *l.right) < std::tie(r.type, *r.left, *r.right);
+
+            return std::forward_as_tuple(l.type, *l.left, *l.right) < std::forward_as_tuple(r.type, *r.left, *r.right);
         }
 
         case Expression::Id::SelectId: {
             const auto &l = *lhs.cast<Select>();
             const auto &r = *rhs.cast<Select>();
-            return std::tie(l.type, *l.condition, *l.ifTrue, *l.ifFalse) <
-                   std::tie(r.type, *r.condition, *r.ifTrue, *r.ifFalse);
+
+            return std::forward_as_tuple(l.type, *l.condition, *l.ifTrue, *l.ifFalse) <
+                   std::forward_as_tuple(r.type, *r.condition, *r.ifTrue, *r.ifFalse);
         }
 
         case Expression::Id::DropId: {
             const auto &l = *lhs.cast<Drop>();
             const auto &r = *rhs.cast<Drop>();
-            return std::tie(l.type, *l.value) < std::tie(r.type, *r.value);
+
+            return std::forward_as_tuple(l.type, *l.value) < std::forward_as_tuple(r.type, *r.value);
         }
 
         case Expression::Id::ReturnId: {
             const auto &l = *lhs.cast<Return>();
             const auto &r = *rhs.cast<Return>();
 
-            if (l.type != r.type) {
-                return l.type < r.type;
-            }
-
-            if (r.value == nullptr) {
-                return false;
-            } else if (l.value == nullptr) {
-                return true;
-            }
-
-            return *l.value < *r.value;
+            return std::forward_as_tuple(l.type, opt(l.value)) < std::forward_as_tuple(r.type, opt(r.value));
         }
 
         case Expression::Id::HostId: {
             const auto &l = *lhs.cast<Host>();
             const auto &r = *rhs.cast<Host>();
-            return std::tie(l.type, l.op, l.operands, l.nameOperand) <
-                   std::tie(r.type, r.op, r.operands, r.nameOperand);
+
+            return std::forward_as_tuple(l.type, l.op, l.operands, l.nameOperand) <
+                   std::forward_as_tuple(r.type, r.op, r.operands, r.nameOperand);
         }
 
         case Expression::Id::AtomicRMWId: {
             const auto &l = *lhs.cast<AtomicRMW>();
             const auto &r = *rhs.cast<AtomicRMW>();
-            return std::tie(l.type, l.op, l.bytes, l.offset, *l.ptr, *l.value) <
-                   std::tie(r.type, r.op, r.bytes, r.offset, *r.ptr, *r.value);
+
+            return std::forward_as_tuple(l.type, l.op, l.bytes, l.offset, *l.ptr, *l.value) <
+                   std::forward_as_tuple(r.type, r.op, r.bytes, r.offset, *r.ptr, *r.value);
         }
 
         case Expression::Id::AtomicCmpxchgId: {
             const auto &l = *lhs.cast<AtomicCmpxchg>();
             const auto &r = *rhs.cast<AtomicCmpxchg>();
-            return std::tie(l.type, l.bytes, l.offset, *l.ptr, *l.expected, *l.replacement) <
-                   std::tie(r.type, r.bytes, r.offset, *r.ptr, *r.expected, *r.replacement);
+
+            return std::forward_as_tuple(l.type, l.bytes, l.offset, *l.ptr, *l.expected, *l.replacement) <
+                   std::forward_as_tuple(r.type, r.bytes, r.offset, *r.ptr, *r.expected, *r.replacement);
         }
 
         case Expression::Id::AtomicWaitId: {
             const auto &l = *lhs.cast<AtomicWait>();
             const auto &r = *rhs.cast<AtomicWait>();
-            return std::tie(l.type, l.offset, *l.ptr, *l.expected, *l.timeout) <
-                   std::tie(r.type, r.offset, *r.ptr, *r.expected, *r.timeout);
+
+            return std::forward_as_tuple(l.type, l.offset, *l.ptr, *l.expected, *l.timeout) <
+                   std::forward_as_tuple(r.type, r.offset, *r.ptr, *r.expected, *r.timeout);
         }
 
         case Expression::Id::AtomicNotifyId: {
             const auto &l = *lhs.cast<AtomicNotify>();
             const auto &r = *rhs.cast<AtomicNotify>();
-            return std::tie(l.type, l.offset, *l.ptr, *l.notifyCount) <
-                   std::tie(r.type, r.offset, *r.ptr, *r.notifyCount);
+
+            return std::forward_as_tuple(l.type, l.offset, *l.ptr, *l.notifyCount) <
+                   std::forward_as_tuple(r.type, r.offset, *r.ptr, *r.notifyCount);
         }
 
         case Expression::Id::SIMDExtractId: {
             const auto &l = *lhs.cast<SIMDExtract>();
             const auto &r = *rhs.cast<SIMDExtract>();
-            return std::tie(l.type, l.op, *l.vec, l.index) < std::tie(r.type, r.op, *r.vec, r.index);
+
+            return std::forward_as_tuple(l.type, l.op, *l.vec, l.index) <
+                   std::forward_as_tuple(r.type, r.op, *r.vec, r.index);
         }
 
         case Expression::Id::SIMDReplaceId: {
             const auto &l = *lhs.cast<SIMDReplace>();
             const auto &r = *rhs.cast<SIMDReplace>();
-            return std::tie(l.type, l.op, *l.vec, l.index, *l.value) <
-                   std::tie(r.type, r.op, *r.vec, r.index, *r.value);
+
+            return std::forward_as_tuple(l.type, l.op, *l.vec, l.index, *l.value) <
+                   std::forward_as_tuple(r.type, r.op, *r.vec, r.index, *r.value);
         }
 
         case Expression::Id::SIMDShuffleId: {
             const auto &l = *lhs.cast<SIMDShuffle>();
             const auto &r = *rhs.cast<SIMDShuffle>();
-            return std::tie(l.type, *l.left, *l.right, l.mask) < std::tie(r.type, *r.left, *r.right, r.mask);
+
+            return std::forward_as_tuple(l.type, *l.left, *l.right, l.mask) <
+                   std::forward_as_tuple(r.type, *r.left, *r.right, r.mask);
         }
 
         case Expression::Id::SIMDBitselectId: {
             const auto &l = *lhs.cast<SIMDBitselect>();
             const auto &r = *rhs.cast<SIMDBitselect>();
-            return std::tie(l.type, *l.left, *l.right, *l.cond) < std::tie(r.type, *r.left, *r.right, *r.cond);
+
+            return std::forward_as_tuple(l.type, *l.left, *l.right, *l.cond) <
+                   std::forward_as_tuple(r.type, *r.left, *r.right, *r.cond);
         }
 
         case Expression::Id::SIMDShiftId: {
             const auto &l = *lhs.cast<SIMDShift>();
             const auto &r = *rhs.cast<SIMDShift>();
-            return std::tie(l.type, l.op, *l.vec, *l.shift) < std::tie(r.type, r.op, *r.vec, *r.shift);
+
+            return std::forward_as_tuple(l.type, l.op, *l.vec, *l.shift) <
+                   std::forward_as_tuple(r.type, r.op, *r.vec, *r.shift);
         }
 
         case Expression::Id::MemoryInitId: {
             const auto &l = *lhs.cast<MemoryInit>();
             const auto &r = *rhs.cast<MemoryInit>();
-            return std::tie(l.type, l.segment, *l.dest, *l.offset, *l.size) <
-                   std::tie(r.type, r.segment, *r.dest, *r.offset, *r.size);
+
+            return std::forward_as_tuple(l.type, l.segment, *l.dest, *l.offset, *l.size) <
+                   std::forward_as_tuple(r.type, r.segment, *r.dest, *r.offset, *r.size);
         }
 
         case Expression::Id::DataDropId: {
             const auto &l = *lhs.cast<DataDrop>();
             const auto &r = *rhs.cast<DataDrop>();
-            return std::tie(l.type, l.segment) < std::tie(r.type, r.segment);
+
+            return std::forward_as_tuple(l.type, l.segment) < std::forward_as_tuple(r.type, r.segment);
         }
 
         case Expression::Id::MemoryCopyId: {
             const auto &l = *lhs.cast<MemoryCopy>();
             const auto &r = *rhs.cast<MemoryCopy>();
-            return std::tie(l.type, *l.dest, *l.source, *l.size) < std::tie(r.type, *r.dest, *r.source, *r.size);
+
+            return std::forward_as_tuple(l.type, *l.dest, *l.source, *l.size) <
+                   std::forward_as_tuple(r.type, *r.dest, *r.source, *r.size);
         }
 
         case Expression::Id::MemoryFillId: {
             const auto &l = *lhs.cast<MemoryFill>();
             const auto &r = *rhs.cast<MemoryFill>();
-            return std::tie(l.type, *l.dest, *l.value, *l.size) < std::tie(r.type, *r.dest, *r.value, *r.size);
+
+            return std::forward_as_tuple(l.type, *l.dest, *l.value, *l.size) <
+                   std::forward_as_tuple(r.type, *r.dest, *r.value, *r.size);
         }
 
         case Expression::Id::NopId:
@@ -331,7 +314,7 @@ namespace wasm {
         default:
             WASM_UNREACHABLE();
         }
-    }
+    } // namespace wasm
 
     inline bool operator<(const ExpressionList &lhs, const ExpressionList &rhs) noexcept {
         return std::lexicographical_compare(
