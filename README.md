@@ -10,7 +10,7 @@ OS: Ubuntu 18.04
 
 Compilers: GCC, Clang, emcc
 
-Libraries: Binaryen 1.38.30
+Libraries: Boost, Binaryen 1.38.30
 
 ## 命名規約
 
