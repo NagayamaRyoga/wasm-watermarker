@@ -164,14 +164,20 @@ namespace wasm {
             const auto &l = *lhs.cast<Unary>();
             const auto &r = *rhs.cast<Unary>();
 
-            return std::forward_as_tuple(l.type, *l.value) < std::forward_as_tuple(r.type, *r.value);
+            return std::forward_as_tuple(l.type, l.op, *l.value) < std::forward_as_tuple(r.type, r.op, *r.value);
         }
 
         case Expression::Id::BinaryId: {
             const auto &l = *lhs.cast<Binary>();
             const auto &r = *rhs.cast<Binary>();
 
-            return std::forward_as_tuple(l.type, *l.left, *l.right) < std::forward_as_tuple(r.type, *r.left, *r.right);
+            const auto &[ll, lr] = *l.left < *l.right ? std::forward_as_tuple(*l.left, *l.right)
+                                                      : std::forward_as_tuple(*l.right, *l.left);
+
+            const auto &[rl, rr] = *r.left < *r.right ? std::forward_as_tuple(*r.left, *r.right)
+                                                      : std::forward_as_tuple(*r.right, *r.left);
+
+            return std::forward_as_tuple(l.type, l.op, ll, lr) < std::forward_as_tuple(r.type, r.op, rl, rr);
         }
 
         case Expression::Id::SelectId: {
