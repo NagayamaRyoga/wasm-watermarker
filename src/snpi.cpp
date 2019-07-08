@@ -2,20 +2,26 @@
 
 #include <wasm-io.h>
 
+#include "kyut/BitStreamReader.hpp"
+
 int main(int argc, char *argv[]) {
     // Parse command line options
-    if (argc != 2) {
-        fmt::print(std::cerr, "{} <input file>\n", argv[0]);
+    if (argc != 3) {
+        fmt::print(std::cerr, "{} <input file> <watermark>\n", argv[0]);
 
         return 1;
     }
 
     const std::string inputFile = argv[1];
+    const std::string watermark = argv[2];
 
     try {
         // Read the input module
         wasm::Module module;
         wasm::ModuleReader{}.read(inputFile, module);
+
+        // Embed watermarks
+        const auto stream = kyut::BitStreamReader::fromString(watermark);
 
         // Output the result
         wasm::ModuleWriter{}.writeText(module, "");
