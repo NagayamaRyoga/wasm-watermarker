@@ -40,9 +40,9 @@ namespace kyut {
             }
 
             const auto pos = pos_read_;
-            pos_read_ = (pos_read_ + 1) % data_.size();
+            pos_read_ = (pos_read_ + 1) % (data_.size() * 8);
 
-            return (data_[pos / 8] >> (pos % 8)) & 1;
+            return ((data_[pos / 8] << (pos % 8)) & 0x80) != 0;
         }
 
         std::uint64_t read(std::size_t countBits) {
@@ -50,7 +50,7 @@ namespace kyut {
 
             for (std::size_t i = 0; i < countBits; i++) {
                 value <<= 1;
-                value |= readBit();
+                value |= readBit() ? 1 : 0;
             }
 
             return value;

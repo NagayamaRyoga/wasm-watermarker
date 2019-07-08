@@ -11,6 +11,6 @@ add_executable(snpi
 )
 
 target_link_libraries(snpi
-    binaryen::binaryen
     fmt::fmt
+    binaryen::binaryen
 )
