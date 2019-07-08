@@ -4,6 +4,5 @@ add_executable(test_kyut
 )
 
 target_link_libraries(test_kyut
-    fmt::fmt
-    binaryen::binaryen
+    kyut
 )

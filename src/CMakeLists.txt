@@ -1,16 +1,16 @@
-# add_library(kthr
-# )
+add_library(kyut
+    kyut/watermarker/FunctionOrderingWatermarker.cpp
+)
 
-# target_link_libraries(kthr
-#     binaryen::binaryen
-#     fmt::fmt
-# )
+target_link_libraries(kyut
+    fmt::fmt
+    binaryen::binaryen
+)
 
 add_executable(snpi
     snpi.cpp
 )
 
 target_link_libraries(snpi
-    fmt::fmt
-    binaryen::binaryen
+    kyut
 )

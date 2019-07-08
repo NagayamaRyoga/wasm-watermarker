@@ -2,7 +2,7 @@
 
 #include <wasm-io.h>
 
-#include "kyut/BitStreamReader.hpp"
+#include "kyut/watermarker/FunctionOrderingWatermarker.hpp"
 
 int main(int argc, char *argv[]) {
     // Parse command line options
@@ -22,6 +22,8 @@ int main(int argc, char *argv[]) {
 
         // Embed watermarks
         const auto stream = kyut::BitStreamReader::fromString(watermark);
+
+        kyut::watermarker::embedFunctionOrdering(module, *stream);
 
         // Output the result
         wasm::ModuleWriter{}.writeText(module, "");
