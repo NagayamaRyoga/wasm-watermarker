@@ -2,6 +2,7 @@
 
 #include <wasm-io.h>
 
+#include "kyut/BitStreamReader.hpp"
 #include "kyut/watermarker/FunctionOrderingWatermarker.hpp"
 
 int main(int argc, char *argv[]) {

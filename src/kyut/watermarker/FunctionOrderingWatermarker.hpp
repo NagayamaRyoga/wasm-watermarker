@@ -3,7 +3,9 @@
 
 #include <wasm.h>
 
-#include "../BitStreamReader.hpp"
+namespace kyut {
+    class BitStreamReader;
+}
 
 namespace kyut::watermarker {
     std::size_t embedFunctionOrdering(wasm::Module &module, BitStreamReader &stream, std::size_t divisions);

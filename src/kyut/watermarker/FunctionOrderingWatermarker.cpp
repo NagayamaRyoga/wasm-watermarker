@@ -5,6 +5,8 @@
 #include <cassert>
 #include <iostream>
 
+#include "../BitStreamReader.hpp"
+
 namespace kyut::watermarker {
     namespace {
         /**

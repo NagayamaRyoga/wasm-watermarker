@@ -1,0 +1,11 @@
+(module
+    (export "f1" (func $f1))
+    (export "f2" (func $f2))
+    (export "f3" (func $f3))
+    (import "env" "g1" (func $g1))
+    (import "env" "g2" (func $g2))
+    (import "env" "g3" (func $g3))
+    (func $f1 (result i32) (i32.const 1))
+    (func $f2 (result i32) (i32.const 2))
+    (func $f3 (result i32) (i32.const 3))
+)
