@@ -42,7 +42,7 @@ namespace kyut::watermarker {
             const auto chunkEnd = chunkBegin + chunkSize;
 
             // Number of bits that can be embedded in the chunk
-            // {floor(log2(x!)) | x in [0, 21)}
+            // {floor(log2(x!)) | x in [2, 21)}
             constexpr auto bitLengthTable = std::array<std::size_t, 21>{
                 0, 0, 1, 2, 4, 6, 9, 12, 15, 18, 21, 25, 28, 32, 36, 40, 44, 48, 52, 56, 61,
             };
