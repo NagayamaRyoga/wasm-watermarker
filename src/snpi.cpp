@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
         // Embed watermarks
         const auto stream = kyut::BitStreamReader::fromString(watermark);
 
-        kyut::watermarker::embedFunctionOrdering(module, *stream);
+        kyut::watermarker::embedFunctionOrdering(module, *stream, 10);
 
         // Output the result
         wasm::ModuleWriter{}.writeText(module, "");
