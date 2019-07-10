@@ -1,14 +1,14 @@
-#include <kyut/BitStreamReader.hpp>
+#include <kyut/CircularBitStreamReader.hpp>
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(kyut)
 
-BOOST_AUTO_TEST_SUITE(bit_stream_reader)
+BOOST_AUTO_TEST_SUITE(circular_bit_stream_reader)
 
 BOOST_AUTO_TEST_CASE(read_bit) {
     constexpr std::uint8_t data[1] = {0x89};
-    BitStreamReader reader{std::begin(data), std::end(data)};
+    CircularBitStreamReader reader{std::begin(data), std::end(data)};
 
     // 0x89 == 0b1000'1001
     BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{0});
@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(read_bit) {
 
 BOOST_AUTO_TEST_CASE(read) {
     constexpr std::uint8_t data[4] = {0x89, 0xab, 0xcd, 0xef};
-    BitStreamReader reader{std::begin(data), std::end(data)};
+    CircularBitStreamReader reader{std::begin(data), std::end(data)};
 
     BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{0});
     BOOST_REQUIRE_EQUAL(reader.read(4), std::uint64_t{0x8});

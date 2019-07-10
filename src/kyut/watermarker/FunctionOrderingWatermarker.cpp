@@ -5,7 +5,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "../BitStreamReader.hpp"
+#include "../CircularBitStreamReader.hpp"
 
 namespace kyut::watermarker {
     namespace {
@@ -23,7 +23,7 @@ namespace kyut::watermarker {
         }
     } // namespace
 
-    std::size_t embedFunctionOrdering(wasm::Module &module, BitStreamReader &stream, std::size_t divisions) {
+    std::size_t embedFunctionOrdering(wasm::Module &module, CircularBitStreamReader &stream, std::size_t divisions) {
         assert(2 <= divisions && divisions < 21 && "because 21! > 2^64");
 
         // Number of bits embedded in the module

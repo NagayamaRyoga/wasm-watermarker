@@ -4,7 +4,7 @@
 
 #include <wasm-io.h>
 
-#include <kyut/BitStreamReader.hpp>
+#include <kyut/CircularBitStreamReader.hpp>
 
 BOOST_AUTO_TEST_SUITE(kyut)
 
@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(function_ordering_watermarker) {
 
     // Embed 0b00
     {
-        BitStreamReader s{{0b0000'0000}};
+        CircularBitStreamReader s{{0b0000'0000}};
         const auto numBitsEmbedded = embedFunctionOrdering(module, s, 10);
 
         BOOST_REQUIRE_EQUAL(numBitsEmbedded, std::size_t{2});
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(function_ordering_watermarker) {
 
     // Embed 0b01
     {
-        BitStreamReader s{{0b0100'0000}};
+        CircularBitStreamReader s{{0b0100'0000}};
         const auto numBitsEmbedded = embedFunctionOrdering(module, s, 10);
 
         BOOST_REQUIRE_EQUAL(numBitsEmbedded, std::size_t{2});
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(function_ordering_watermarker) {
 
     // Embed 0b10
     {
-        BitStreamReader s{{0b1000'0000}};
+        CircularBitStreamReader s{{0b1000'0000}};
         const auto numBitsEmbedded = embedFunctionOrdering(module, s, 10);
 
         BOOST_REQUIRE_EQUAL(numBitsEmbedded, std::size_t{2});
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(function_ordering_watermarker) {
 
     // Embed 0b11
     {
-        BitStreamReader s{{0b1100'0000}};
+        CircularBitStreamReader s{{0b1100'0000}};
         const auto numBitsEmbedded = embedFunctionOrdering(module, s, 10);
 
         BOOST_REQUIRE_EQUAL(numBitsEmbedded, std::size_t{2});

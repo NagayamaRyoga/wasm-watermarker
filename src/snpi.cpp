@@ -2,7 +2,7 @@
 
 #include <wasm-io.h>
 
-#include "kyut/BitStreamReader.hpp"
+#include "kyut/CircularBitStreamReader.hpp"
 #include "kyut/watermarker/FunctionOrderingWatermarker.hpp"
 
 int main(int argc, char *argv[]) {
@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
         wasm::ModuleReader{}.read(inputFile, module);
 
         // Embed watermarks
-        const auto stream = kyut::BitStreamReader::fromString(watermark);
+        const auto stream = kyut::CircularBitStreamReader::fromString(watermark);
 
         kyut::watermarker::embedFunctionOrdering(module, *stream, 10);
 
