@@ -15,7 +15,7 @@ namespace kyut {
 
         template <typename Iterator>
         explicit CircularBitStreamReader(Iterator begin, Iterator end)
-            : CircularBitStreamReader({begin, end}) {}
+            : CircularBitStreamReader(std::vector<std::uint8_t>{begin, end}) {}
 
         CircularBitStreamReader(const CircularBitStreamReader &) = delete;
         CircularBitStreamReader(CircularBitStreamReader &&) = delete;
