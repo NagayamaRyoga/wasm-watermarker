@@ -9,13 +9,26 @@
 
 namespace kyut::watermarker {
     namespace {
+        // Number of bits that can be embedded in a chunk
+        // {floor(log2(x!)) | x in [2, 21)}
+        constexpr auto factorialBitLengthTable = std::array<std::size_t, 21>{
+            0, 0, 1, 2, 4, 6, 9, 12, 15, 18, 21, 25, 28, 32, 36, 40, 44, 48, 52, 56, 61,
+        };
+
         /**
-         * Move the `element` in [begin, end) to the beginning of the range.
-         * The order of elements other than `element` is maintained.
+         * @brief   Move the `element` in [begin, end) to the beginning of the range.
+         *          The order of elements other than `element` is maintained.
+         *
+         * @tparam  BidirectionalIterator   Bidirectional iterator type.
+         * @param   begin       Bidirectional iterator to the initial position in a sequence.
+         * @param   end         Bidirectional iterator to the final position in a sequence.
+         * @param   element     Bidirectional iterator to the element to be moved.
+         *                      `element` must be in the range of [begin, end).
          */
-        template <typename RandomAccessIterator>
-        void moveToFront(RandomAccessIterator begin, RandomAccessIterator end, RandomAccessIterator element) {
-            assert(begin <= element && element < end);
+        template <typename BidirectionalIterator>
+        void moveToFront(BidirectionalIterator begin, BidirectionalIterator end, BidirectionalIterator element) {
+            assert(std::distance(begin, element) >= 0);
+            assert(std::distance(begin, element) < std::distance(begin, end));
 
             auto tmp = std::move(*element);
             std::move_backward(begin, element, std::next(element));
@@ -23,8 +36,8 @@ namespace kyut::watermarker {
         }
     } // namespace
 
-    std::size_t embedFunctionOrdering(wasm::Module &module, CircularBitStreamReader &stream, std::size_t divisions) {
-        assert(2 <= divisions && divisions < 21 && "because 21! > 2^64");
+    std::size_t embedFunctionOrdering(wasm::Module &module, CircularBitStreamReader &stream, std::size_t maxChunkSize) {
+        assert(2 <= maxChunkSize && maxChunkSize < 21 && "because 21! > 2^64");
 
         // Number of bits embedded in the module
         std::size_t numBits = 0;
@@ -36,17 +49,13 @@ namespace kyut::watermarker {
 
         const size_t count = std::distance(start, std::end(module.functions));
 
-        for (size_t i = 0; i < count; i += divisions) {
-            const auto chunkSize = (std::min)(divisions, count - i);
+        for (size_t i = 0; i < count; i += maxChunkSize) {
+            const auto chunkSize = (std::min)(maxChunkSize, count - i);
             const auto chunkBegin = start + i;
             const auto chunkEnd = chunkBegin + chunkSize;
 
             // Number of bits that can be embedded in the chunk
-            // {floor(log2(x!)) | x in [2, 21)}
-            constexpr auto bitLengthTable = std::array<std::size_t, 21>{
-                0, 0, 1, 2, 4, 6, 9, 12, 15, 18, 21, 25, 28, 32, 36, 40, 44, 48, 52, 56, 61,
-            };
-            const auto numBitsEmbeddedInChunk = bitLengthTable[chunkSize];
+            const auto numBitsEmbeddedInChunk = factorialBitLengthTable[chunkSize];
 
             // Sort functions in the chunk
             std::sort(chunkBegin, chunkEnd, [](const auto &a, const auto &b) { return a->name < b->name; });
