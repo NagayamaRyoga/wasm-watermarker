@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <iostream>
 
 #include "../BitStreamWriter.hpp"
 #include "../CircularBitStreamReader.hpp"
