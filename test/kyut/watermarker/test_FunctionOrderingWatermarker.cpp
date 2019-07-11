@@ -7,6 +7,10 @@
 #include <kyut/BitStreamWriter.hpp>
 #include <kyut/CircularBitStreamReader.hpp>
 
+#ifndef KYUT_TEST_SOURCE_DIR
+#define KYUT_TEST_SOURCE_DIR "."
+#endif
+
 BOOST_AUTO_TEST_SUITE(kyut)
 
 BOOST_AUTO_TEST_SUITE(watermarker)
