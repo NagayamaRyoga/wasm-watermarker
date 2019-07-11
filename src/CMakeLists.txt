@@ -14,3 +14,11 @@ add_executable(snpi
 target_link_libraries(snpi
     kyut
 )
+
+add_executable(pisn
+    pisn.cpp
+)
+
+target_link_libraries(pisn
+    kyut
+)

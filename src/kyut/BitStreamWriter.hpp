@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <string_view>
 #include <vector>
 
 namespace kyut {
@@ -24,7 +25,14 @@ namespace kyut {
             return data_;
         }
 
-        [[nodiscard]] std::size_t tell() const noexcept {
+        [[nodiscard]] std::string_view dataAsString() const {
+            return std::string_view{
+                reinterpret_cast<const char *>(data_.data()),
+                data_.size(),
+            };
+        }
+
+            [[nodiscard]] std::size_t tell() const noexcept {
             return pos_write_;
         }
 
