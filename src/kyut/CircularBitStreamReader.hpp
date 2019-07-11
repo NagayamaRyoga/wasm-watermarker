@@ -31,6 +31,10 @@ namespace kyut {
                 reinterpret_cast<const std::uint8_t *>(s.data() + s.size()));
         }
 
+        [[nodiscard]] const std::vector<std::uint8_t> &data() const noexcept {
+            return data_;
+        }
+
         [[nodiscard]] std::size_t tell() const noexcept {
             return pos_read_;
         }

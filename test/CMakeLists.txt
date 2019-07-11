@@ -1,6 +1,7 @@
 add_executable(test_kyut
     test_kyut.cpp
-    kyut/test_BitStreamReader.cpp
+    kyut/test_CircularBitStreamReader.cpp
+    kyut/test_BitStreamWriter.cpp
     kyut/watermarker/test_FunctionOrderingWatermarker.cpp
 )
 
