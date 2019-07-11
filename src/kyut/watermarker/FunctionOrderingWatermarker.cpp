@@ -5,6 +5,7 @@
 #include <cassert>
 #include <iostream>
 
+#include "../BitStreamWriter.hpp"
 #include "../CircularBitStreamReader.hpp"
 
 namespace kyut::watermarker {
@@ -71,6 +72,63 @@ namespace kyut::watermarker {
 
                 moveToFront(it, chunkEnd, it + n);
             }
+
+            numBits += numBitsEmbeddedInChunk;
+        }
+
+        return numBits;
+    }
+
+    std::size_t extractFunctionOrdering(wasm::Module &module, BitStreamWriter &stream, std::size_t maxChunkSize) {
+        assert(2 <= maxChunkSize && maxChunkSize < 21 && "because 21! > 2^64");
+
+        // Number of bits extracted in the module
+        std::size_t numBits = 0;
+
+        // Split according to the function in the module has body or not
+        // [begin, start) has no body, and [start, end) has
+        const auto start = std::partition(
+            std::begin(module.functions), std::end(module.functions), [](const auto &f) { return f->body == nullptr; });
+
+        const size_t count = std::distance(start, std::end(module.functions));
+
+        for (size_t i = 0; i < count; i += maxChunkSize) {
+            const auto chunkSize = (std::min)(maxChunkSize, count - i);
+            const auto chunkBegin = start + i;
+            const auto chunkEnd = chunkBegin + chunkSize;
+
+            // Number of bits embedded in the chunk
+            const auto numBitsEmbeddedInChunk = factorialBitLengthTable[chunkSize];
+
+            // Extract watermarks from the chunk
+            std::vector<wasm::Function *> functions;
+            functions.reserve(chunkSize);
+
+            std::transform(chunkBegin, chunkEnd, std::back_inserter(functions), [](const auto &f) { return f.get(); });
+
+            std::sort(std::begin(functions), std::end(functions), [](const auto &a, const auto &b) {
+                return a->name < b->name;
+            });
+
+            std::int64_t watermark = 0;
+            std::int64_t base = 1;
+
+            for (auto it = chunkBegin; it != chunkEnd; ++it) {
+                // Get index of the function `*it`
+                const auto pos = std::find_if(
+                    std::begin(functions), std::end(functions), [it](const auto &f) { return f == it->get(); });
+                assert(pos != std::end(functions));
+
+                const std::size_t index = std::distance(std::begin(functions), pos);
+
+                watermark += index * base;
+                base *= functions.size();
+
+                // Remove the function found in this step
+                functions.erase(pos);
+            }
+
+            stream.write(watermark, numBitsEmbeddedInChunk);
 
             numBits += numBitsEmbeddedInChunk;
         }
