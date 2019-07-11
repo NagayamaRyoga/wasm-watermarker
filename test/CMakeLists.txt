@@ -5,6 +5,10 @@ add_executable(test_kyut
     kyut/watermarker/test_FunctionOrderingWatermarker.cpp
 )
 
+target_compile_definitions(test_kyut
+    PRIVATE KYUT_TEST_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+)
+
 target_link_libraries(test_kyut
     kyut
 )

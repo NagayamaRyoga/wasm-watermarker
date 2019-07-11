@@ -10,9 +10,9 @@ BOOST_AUTO_TEST_SUITE(kyut)
 
 BOOST_AUTO_TEST_SUITE(watermarker)
 
-BOOST_AUTO_TEST_CASE(function_ordering_watermarker) {
+BOOST_AUTO_TEST_CASE(embed_function_ordering) {
     wasm::Module module;
-    wasm::ModuleReader{}.read("../example/test1.wast", module);
+    wasm::ModuleReader{}.read(KYUT_TEST_SOURCE_DIR "/example/test1.wast", module);
 
     BOOST_REQUIRE_EQUAL(module.functions.size(), std::size_t{6});
     BOOST_REQUIRE_EQUAL(module.functions[0]->name, "g1");
