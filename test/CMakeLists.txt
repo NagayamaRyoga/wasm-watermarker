@@ -3,6 +3,7 @@ add_executable(test_kyut
     kyut/test_CircularBitStreamReader.cpp
     kyut/test_BitStreamWriter.cpp
     kyut/watermarker/test_FunctionOrderingWatermarker.cpp
+    kyut/watermarker/test_OperandSwappingWatermarker.cpp
 )
 
 target_compile_definitions(test_kyut

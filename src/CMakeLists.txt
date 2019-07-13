@@ -1,5 +1,6 @@
 add_library(kyut
     kyut/watermarker/FunctionOrderingWatermarker.cpp
+    kyut/watermarker/OperandSwappingWatermarker.cpp
 )
 
 target_link_libraries(kyut
