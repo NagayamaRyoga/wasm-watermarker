@@ -12,7 +12,7 @@ namespace kyut::watermarker {
     /**
      * @brief   Embed watermarks by changing the order of functions.
      *
-     * @param   module          A reference to the WebAssembly module in which watermarks will be embeded.
+     * @param   module          A reference to the WebAssembly module in which watermarks will be embedded.
      * @param   stream          Input stream containing watermarks to embed.
      * @param   maxChunkSize    The maximum number of functions in the watermark chunk.
      * @return  Number of watermark bits embedded in the module.
@@ -22,7 +22,7 @@ namespace kyut::watermarker {
     /**
      * @brief Extract watermarks by changing the order of functions.
      *
-     * @param   module
+     * @param   module          A reference to the WebAssembly module with embedded watermarks.
      * @param   stream          Output stream to save the watermarks.
      * @param   maxChunkSize    The maximum number of functions in the watermark chunk.
      * @return  Number of watermark bits extracted from the module.
