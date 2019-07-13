@@ -12,7 +12,6 @@
 #endif
 
 BOOST_AUTO_TEST_SUITE(kyut)
-
 BOOST_AUTO_TEST_SUITE(watermarker)
 
 BOOST_AUTO_TEST_CASE(embed_function_ordering) {
@@ -158,5 +157,4 @@ BOOST_AUTO_TEST_CASE(extract_function_ordering) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 BOOST_AUTO_TEST_SUITE_END()

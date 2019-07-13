@@ -3,7 +3,6 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(kyut)
-
 BOOST_AUTO_TEST_SUITE(bit_stream_writer)
 
 BOOST_AUTO_TEST_CASE(write_bit) {
@@ -51,5 +50,4 @@ BOOST_AUTO_TEST_CASE(write) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 BOOST_AUTO_TEST_SUITE_END()

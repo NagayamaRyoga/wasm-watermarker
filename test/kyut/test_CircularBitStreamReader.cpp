@@ -3,7 +3,6 @@
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(kyut)
-
 BOOST_AUTO_TEST_SUITE(circular_bit_stream_reader)
 
 BOOST_AUTO_TEST_CASE(read_bit) {
@@ -61,5 +60,4 @@ BOOST_AUTO_TEST_CASE(read) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
 BOOST_AUTO_TEST_SUITE_END()
