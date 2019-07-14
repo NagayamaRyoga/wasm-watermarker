@@ -423,13 +423,25 @@ namespace kyut::watermarker {
                 return (std::max)(embedExpression(expr.left, stream), embedExpression(expr.right, stream));
             }
 
-            // TODO: implement watermarking
-            const auto leftSideEffect = embedExpression(expr.left, stream);
-            const auto rightSideEffect = embedExpression(expr.right, stream);
+            // Sort both of the operands
+            auto [lo, hi] = std::minmax(expr.left, expr.right, [](auto a, auto b) { return *a < *b; });
 
-            (void)swapOperands;
+            const auto loEffect = embedExpression(lo, stream);
+            const auto hiEffect = embedExpression(hi, stream);
 
-            return (std::max)(leftSideEffect, rightSideEffect);
+            if (static_cast<std::uint32_t>(loEffect) + static_cast<std::uint32_t>(hiEffect) >= 3) {
+                // The operands have side effect and cannot be swapped
+                return (std::max)(loEffect, hiEffect);
+            }
+
+            // Embed watermarks by swapping operands
+            const bool bit = stream.readBit();
+
+            if (bit == (expr.left == lo)) {
+                swapOperands(expr);
+            }
+
+            return (std::max)(loEffect, hiEffect);
         }
 
         SideEffect embedSelect(wasm::Select &expr, CircularBitStreamReader &stream) {
