@@ -45,175 +45,232 @@ namespace kyut::watermarker {
     EXPR_TYPE(MemoryCopy)                                                                                              \
     EXPR_TYPE(MemoryFill)
 
-        // Watermark embedder
-        std::size_t embedExpression(wasm::Expression *expr, CircularBitStreamReader &stream);
+        enum class SideEffect : std::uint32_t {
+            none = 0,
+            readOnly = 1,
+            write = 2,
+        };
 
-        std::size_t embedExpressionList(const wasm::ExpressionList &exprs, CircularBitStreamReader &stream) {
-            std::size_t numBits = 0;
+        // Watermark embedder
+        SideEffect embedExpression(wasm::Expression *expr, CircularBitStreamReader &stream);
+
+        SideEffect embedExpressionList(const wasm::ExpressionList &exprs, CircularBitStreamReader &stream) {
+            auto effect = SideEffect::none;
 
             for (const auto expr : exprs) {
-                numBits += embedExpression(expr, stream);
+                effect = (std::max)(embedExpression(expr, stream), effect);
             }
 
-            return numBits;
+            return effect;
         }
 
-        std::size_t embedBlock(wasm::Block &expr, CircularBitStreamReader &stream) {
+        SideEffect embedBlock(wasm::Block &expr, CircularBitStreamReader &stream) {
             return embedExpressionList(expr.list, stream);
         }
 
-        std::size_t embedIf(wasm::If &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.condition, stream) + embedExpression(expr.ifTrue, stream) +
-                   embedExpression(expr.ifFalse, stream);
+        SideEffect embedIf(wasm::If &expr, CircularBitStreamReader &stream) {
+            return (std::max)({
+                embedExpression(expr.condition, stream),
+                embedExpression(expr.ifTrue, stream),
+                embedExpression(expr.ifFalse, stream),
+            });
         }
 
-        std::size_t embedLoop(wasm::Loop &expr, CircularBitStreamReader &stream) {
+        SideEffect embedLoop(wasm::Loop &expr, CircularBitStreamReader &stream) {
             return embedExpression(expr.body, stream);
         }
 
-        std::size_t embedBreak(wasm::Break &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.value, stream) + embedExpression(expr.condition, stream);
+        SideEffect embedBreak(wasm::Break &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.value, stream);
+            embedExpression(expr.condition, stream);
+
+            return SideEffect::write;
         }
 
-        std::size_t embedSwitch(wasm::Switch &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.condition, stream) + embedExpression(expr.value, stream);
+        SideEffect embedSwitch(wasm::Switch &expr, CircularBitStreamReader &stream) {
+            return (std::max)(embedExpression(expr.condition, stream), embedExpression(expr.value, stream));
         }
 
-        std::size_t embedCall(wasm::Call &expr, CircularBitStreamReader &stream) {
-            return embedExpressionList(expr.operands, stream);
+        SideEffect embedCall(wasm::Call &expr, CircularBitStreamReader &stream) {
+            embedExpressionList(expr.operands, stream);
+
+            // It is difficult to estimate the side effects of the function calls
+            return SideEffect::write;
         }
 
-        std::size_t embedCallIndirect(wasm::CallIndirect &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.target, stream) + embedExpressionList(expr.operands, stream);
+        SideEffect embedCallIndirect(wasm::CallIndirect &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.target, stream);
+            embedExpressionList(expr.operands, stream);
+
+            // It is difficult to estimate the side effects of the function calls
+            return SideEffect::write;
         }
 
-        std::size_t embedGetLocal([[maybe_unused]] wasm::GetLocal &expr,
+        SideEffect embedGetLocal([[maybe_unused]] wasm::GetLocal &expr,
+                                 [[maybe_unused]] CircularBitStreamReader &stream) {
+            return SideEffect::readOnly;
+        }
+
+        SideEffect embedSetLocal(wasm::SetLocal &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.value, stream);
+
+            return SideEffect::write;
+        }
+
+        SideEffect embedGetGlobal([[maybe_unused]] wasm::GetGlobal &expr,
                                   [[maybe_unused]] CircularBitStreamReader &stream) {
-            return 0;
+            return SideEffect::readOnly;
         }
 
-        std::size_t embedSetLocal(wasm::SetLocal &expr, CircularBitStreamReader &stream) {
+        SideEffect embedSetGlobal(wasm::SetGlobal &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.value, stream);
+
+            return SideEffect::write;
+        }
+
+        SideEffect embedLoad(wasm::Load &expr, CircularBitStreamReader &stream) {
+            return (std::max)(embedExpression(expr.ptr, stream), SideEffect::readOnly);
+        }
+
+        SideEffect embedStore(wasm::Store &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.ptr, stream);
+            embedExpression(expr.value, stream);
+
+            return SideEffect::write;
+        }
+
+        SideEffect embedConst([[maybe_unused]] wasm::Const &expr, [[maybe_unused]] CircularBitStreamReader &stream) {
+            return SideEffect::none;
+        }
+
+        SideEffect embedUnary(wasm::Unary &expr, CircularBitStreamReader &stream) {
             return embedExpression(expr.value, stream);
         }
 
-        std::size_t embedGetGlobal([[maybe_unused]] wasm::GetGlobal &expr,
-                                   [[maybe_unused]] CircularBitStreamReader &stream) {
-            return 0;
-        }
-
-        std::size_t embedSetGlobal(wasm::SetGlobal &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.value, stream);
-        }
-
-        std::size_t embedLoad(wasm::Load &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.ptr, stream);
-        }
-
-        std::size_t embedStore(wasm::Store &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.ptr, stream) + embedExpression(expr.value, stream);
-        }
-
-        std::size_t embedConst([[maybe_unused]] wasm::Const &expr, [[maybe_unused]] CircularBitStreamReader &stream) {
-            return 0;
-        }
-
-        std::size_t embedUnary(wasm::Unary &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.value, stream);
-        }
-
-        std::size_t embedBinary(wasm::Binary &expr, CircularBitStreamReader &stream) {
+        SideEffect embedBinary(wasm::Binary &expr, CircularBitStreamReader &stream) {
             // TODO: implement watermarking
-            return embedExpression(expr.left, stream) + embedExpression(expr.right, stream);
+            return (std::max)(embedExpression(expr.left, stream), embedExpression(expr.right, stream));
         }
 
-        std::size_t embedSelect(wasm::Select &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.condition, stream) + embedExpression(expr.ifTrue, stream) +
-                   embedExpression(expr.ifFalse, stream);
+        SideEffect embedSelect(wasm::Select &expr, CircularBitStreamReader &stream) {
+            return (std::max)({
+                embedExpression(expr.condition, stream),
+                embedExpression(expr.ifTrue, stream),
+                embedExpression(expr.ifFalse, stream),
+            });
         }
 
-        std::size_t embedDrop(wasm::Drop &expr, CircularBitStreamReader &stream) {
+        SideEffect embedDrop(wasm::Drop &expr, CircularBitStreamReader &stream) {
             return embedExpression(expr.value, stream);
         }
 
-        std::size_t embedReturn(wasm::Return &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.value, stream);
+        SideEffect embedReturn(wasm::Return &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.value, stream);
+
+            return SideEffect::write;
         }
 
-        std::size_t embedHost(wasm::Host &expr, CircularBitStreamReader &stream) {
-            return embedExpressionList(expr.operands, stream);
+        SideEffect embedHost(wasm::Host &expr, CircularBitStreamReader &stream) {
+            embedExpressionList(expr.operands, stream);
+
+            return SideEffect::write;
         }
 
-        std::size_t embedNop([[maybe_unused]] wasm::Nop &expr, [[maybe_unused]] CircularBitStreamReader &stream) {
-            return 0;
+        SideEffect embedNop([[maybe_unused]] wasm::Nop &expr, [[maybe_unused]] CircularBitStreamReader &stream) {
+            return SideEffect::none;
         }
 
-        std::size_t embedUnreachable([[maybe_unused]] wasm::Unreachable &expr,
-                                     [[maybe_unused]] CircularBitStreamReader &stream) {
-            return 0;
+        SideEffect embedUnreachable([[maybe_unused]] wasm::Unreachable &expr,
+                                    [[maybe_unused]] CircularBitStreamReader &stream) {
+            return SideEffect::write;
         }
 
-        std::size_t embedAtomicRMW(wasm::AtomicRMW &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.ptr, stream) + embedExpression(expr.value, stream);
+        SideEffect embedAtomicRMW(wasm::AtomicRMW &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.ptr, stream);
+            embedExpression(expr.value, stream);
+
+            return SideEffect::write;
         }
 
-        std::size_t embedAtomicCmpxchg(wasm::AtomicCmpxchg &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.ptr, stream) + embedExpression(expr.expected, stream) +
-                   embedExpression(expr.replacement, stream);
+        SideEffect embedAtomicCmpxchg(wasm::AtomicCmpxchg &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.ptr, stream);
+            embedExpression(expr.expected, stream);
+            embedExpression(expr.replacement, stream);
+
+            return SideEffect::write;
         }
 
-        std::size_t embedAtomicWait(wasm::AtomicWait &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.ptr, stream) + embedExpression(expr.expected, stream) +
-                   embedExpression(expr.timeout, stream);
+        SideEffect embedAtomicWait(wasm::AtomicWait &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.ptr, stream);
+            embedExpression(expr.expected, stream);
+            embedExpression(expr.timeout, stream);
+
+            return SideEffect::write;
         }
 
-        std::size_t embedAtomicNotify(wasm::AtomicNotify &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.ptr, stream) + embedExpression(expr.notifyCount, stream);
+        SideEffect embedAtomicNotify(wasm::AtomicNotify &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.ptr, stream);
+            embedExpression(expr.notifyCount, stream);
+
+            return SideEffect::write;
         }
 
-        std::size_t embedSIMDExtract(wasm::SIMDExtract &expr, CircularBitStreamReader &stream) {
+        SideEffect embedSIMDExtract(wasm::SIMDExtract &expr, CircularBitStreamReader &stream) {
             return embedExpression(expr.vec, stream);
         }
 
-        std::size_t embedSIMDReplace(wasm::SIMDReplace &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.vec, stream) + embedExpression(expr.value, stream);
+        SideEffect embedSIMDReplace(wasm::SIMDReplace &expr, CircularBitStreamReader &stream) {
+            return (std::max)(embedExpression(expr.vec, stream), embedExpression(expr.value, stream));
         }
 
-        std::size_t embedSIMDShuffle(wasm::SIMDShuffle &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.left, stream) + embedExpression(expr.right, stream);
+        SideEffect embedSIMDShuffle(wasm::SIMDShuffle &expr, CircularBitStreamReader &stream) {
+            return (std::max)(embedExpression(expr.left, stream), embedExpression(expr.right, stream));
         }
 
-        std::size_t embedSIMDBitselect(wasm::SIMDBitselect &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.cond, stream) + embedExpression(expr.left, stream) +
-                   embedExpression(expr.right, stream);
+        SideEffect embedSIMDBitselect(wasm::SIMDBitselect &expr, CircularBitStreamReader &stream) {
+            return (std::max)({
+                embedExpression(expr.cond, stream),
+                embedExpression(expr.left, stream),
+                embedExpression(expr.right, stream),
+            });
         }
 
-        std::size_t embedSIMDShift(wasm::SIMDShift &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.vec, stream) + embedExpression(expr.shift, stream);
+        SideEffect embedSIMDShift(wasm::SIMDShift &expr, CircularBitStreamReader &stream) {
+            return (std::max)(embedExpression(expr.vec, stream), embedExpression(expr.shift, stream));
         }
 
-        std::size_t embedMemoryInit(wasm::MemoryInit &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.dest, stream) + embedExpression(expr.offset, stream) +
-                   embedExpression(expr.size, stream);
+        SideEffect embedMemoryInit(wasm::MemoryInit &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.dest, stream);
+            embedExpression(expr.offset, stream);
+            embedExpression(expr.size, stream);
+
+            return SideEffect::write;
         }
 
-        std::size_t embedDataDrop([[maybe_unused]] wasm::DataDrop &expr,
-                                  [[maybe_unused]] CircularBitStreamReader &stream) {
-            return 0;
+        SideEffect embedDataDrop([[maybe_unused]] wasm::DataDrop &expr,
+                                 [[maybe_unused]] CircularBitStreamReader &stream) {
+            return SideEffect::write;
         }
 
-        std::size_t embedMemoryCopy(wasm::MemoryCopy &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.dest, stream) + embedExpression(expr.source, stream) +
-                   embedExpression(expr.size, stream);
+        SideEffect embedMemoryCopy(wasm::MemoryCopy &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.dest, stream);
+            embedExpression(expr.source, stream);
+            embedExpression(expr.size, stream);
+
+            return SideEffect::write;
         }
 
-        std::size_t embedMemoryFill(wasm::MemoryFill &expr, CircularBitStreamReader &stream) {
-            return embedExpression(expr.dest, stream) + embedExpression(expr.value, stream) +
-                   embedExpression(expr.size, stream);
+        SideEffect embedMemoryFill(wasm::MemoryFill &expr, CircularBitStreamReader &stream) {
+            embedExpression(expr.dest, stream);
+            embedExpression(expr.value, stream);
+            embedExpression(expr.size, stream);
+
+            return SideEffect::write;
         }
 
-        std::size_t embedExpression(wasm::Expression *expr, CircularBitStreamReader &stream) {
+        SideEffect embedExpression(wasm::Expression *expr, CircularBitStreamReader &stream) {
             if (expr == nullptr) {
-                return 0;
+                return SideEffect::none;
             }
 
             switch (expr->_id) {
@@ -228,8 +285,8 @@ namespace kyut::watermarker {
             }
         }
 
-        std::size_t embedFunction(wasm::Function &function, CircularBitStreamReader &stream) {
-            return embedExpression(function.body, stream);
+        void embedFunction(wasm::Function &function, CircularBitStreamReader &stream) {
+            embedExpression(function.body, stream);
         }
     } // namespace
 
@@ -246,20 +303,20 @@ namespace kyut::watermarker {
         std::sort(
             std::begin(functions), std::end(functions), [](const auto a, const auto b) { return a->name < b->name; });
 
-        // Number of bits embedded in the module
-        std::size_t numBits = 0;
-
         // Embed watermarks
+        std::size_t posStart = stream.tell();
+
         for (const auto f : functions) {
-            numBits += embedFunction(*f, stream);
+            embedFunction(*f, stream);
         }
 
-        return numBits;
+        return stream.tell() - posStart;
     }
 
     std::size_t extractOperandSwapping(wasm::Module &module, BitStreamWriter &stream) {
         (void)module;
         (void)stream;
-        return 0;
+
+        WASM_UNREACHABLE();
     }
 } // namespace kyut::watermarker
