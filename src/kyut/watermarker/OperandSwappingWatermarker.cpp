@@ -982,7 +982,7 @@ namespace wasm {
         return std::minmax(*a.left, *a.right) < std::minmax(*b.left, *b.right);
     }
     bool operator<(const wasm::Select &a, const wasm::Select &b) {
-        return std::tie(a.condition, *a.ifTrue, *a.ifFalse) < std::tie(b.condition, *b.ifTrue, *b.ifFalse);
+        return std::tie(*a.condition, *a.ifTrue, *a.ifFalse) < std::tie(*b.condition, *b.ifTrue, *b.ifFalse);
     }
     bool operator<(const wasm::Drop &a, const wasm::Drop &b) {
         return *a.value < *b.value;
@@ -1000,19 +1000,19 @@ namespace wasm {
         return false;
     }
     bool operator<(const wasm::AtomicRMW &a, const wasm::AtomicRMW &b) {
-        return std::tie(a.op, a.bytes, a.offset, *a.ptr, *a.value) <
-               std::tie(b.op, b.bytes, b.offset, *b.ptr, *b.value);
+        return std::tie(a.op, a.bytes, a.offset.addr, *a.ptr, *a.value) <
+               std::tie(b.op, b.bytes, b.offset.addr, *b.ptr, *b.value);
     }
     bool operator<(const wasm::AtomicCmpxchg &a, const wasm::AtomicCmpxchg &b) {
-        return std::tie(a.bytes, a.offset, *a.ptr, *a.expected, *a.replacement) <
-               std::tie(b.bytes, b.offset, *b.ptr, *b.expected, *b.replacement);
+        return std::tie(a.bytes, a.offset.addr, *a.ptr, *a.expected, *a.replacement) <
+               std::tie(b.bytes, b.offset.addr, *b.ptr, *b.expected, *b.replacement);
     }
     bool operator<(const wasm::AtomicWait &a, const wasm::AtomicWait &b) {
-        return std::tie(a.offset, *a.ptr, *a.expected, *a.timeout, a.expectedType) <
-               std::tie(b.offset, *b.ptr, *b.expected, *b.timeout, b.expectedType);
+        return std::tie(a.offset.addr, *a.ptr, *a.expected, *a.timeout, a.expectedType) <
+               std::tie(b.offset.addr, *b.ptr, *b.expected, *b.timeout, b.expectedType);
     }
     bool operator<(const wasm::AtomicNotify &a, const wasm::AtomicNotify &b) {
-        return std::tie(a.offset, *a.ptr, *a.notifyCount) < std::tie(b.offset, *b.ptr, *b.notifyCount);
+        return std::tie(a.offset.addr, *a.ptr, *a.notifyCount) < std::tie(b.offset.addr, *b.ptr, *b.notifyCount);
     }
     bool operator<(const wasm::SIMDExtract &a, const wasm::SIMDExtract &b) {
         return std::tie(a.op, *a.vec, a.index) < std::tie(b.op, *b.vec, b.index);
