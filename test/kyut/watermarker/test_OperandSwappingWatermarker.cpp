@@ -136,5 +136,27 @@ BOOST_AUTO_TEST_CASE(embed_operand_swapping_110111) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(extract_operand_swapping) {
+    for (std::uint8_t i = 0; i < 64; i++) {
+        const std::uint8_t x = i << 2;
+
+        wasm::Module module;
+        wasm::ModuleReader{}.read(KYUT_TEST_SOURCE_DIR "/example/test2.wast", module);
+
+        // Embed x
+        CircularBitStreamReader s{{x}};
+        const auto numBitsEmbedded = embedOperandSwapping(module, s);
+
+        BitStreamWriter w;
+        const auto numBitsExtracted = extractOperandSwapping(module, w);
+
+        BOOST_REQUIRE_EQUAL(numBitsEmbedded, std::size_t{6});
+        BOOST_REQUIRE_EQUAL(numBitsExtracted, std::size_t{6});
+        BOOST_REQUIRE_EQUAL(w.tell(), std::size_t{6});
+        BOOST_REQUIRE_EQUAL(w.data().size(), std::size_t{1});
+        BOOST_REQUIRE_EQUAL(w.data()[0], std::uint8_t{x});
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
