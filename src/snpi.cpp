@@ -4,17 +4,19 @@
 
 #include "kyut/CircularBitStreamReader.hpp"
 #include "kyut/watermarker/FunctionOrderingWatermarker.hpp"
+#include "kyut/watermarker/OperandSwappingWatermarker.hpp"
 
 int main(int argc, char *argv[]) {
     // Parse command line options
-    if (argc != 3) {
-        fmt::print(std::cerr, "{} <input file> <watermark>\n", argv[0]);
+    if (argc != 4) {
+        fmt::print(std::cerr, "{} <input file> <method> <watermark>\n", argv[0]);
 
         return 1;
     }
 
     const std::string inputFile = argv[1];
-    const std::string watermark = argv[2];
+    const std::string method = argv[2];
+    const std::string watermark = argv[3];
 
     try {
         // Read the input module
@@ -24,7 +26,13 @@ int main(int argc, char *argv[]) {
         // Embed watermarks
         const auto stream = kyut::CircularBitStreamReader::fromString(watermark);
 
-        kyut::watermarker::embedFunctionOrdering(module, *stream, 10);
+        if (method == "opswap") {
+            kyut::watermarker::embedOperandSwapping(module, *stream);
+        } else if (method == "funcord") {
+            kyut::watermarker::embedFunctionOrdering(module, *stream, 10);
+        } else {
+            throw std::runtime_error{fmt::format("unknown embedding method: {}", method)};
+        }
 
         // Output the result
         wasm::ModuleWriter{}.writeText(module, "");

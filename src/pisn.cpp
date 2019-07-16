@@ -4,16 +4,18 @@
 
 #include "kyut/BitStreamWriter.hpp"
 #include "kyut/watermarker/FunctionOrderingWatermarker.hpp"
+#include "kyut/watermarker/OperandSwappingWatermarker.hpp"
 
 int main(int argc, char *argv[]) {
     // Parse command line options
-    if (argc != 2) {
-        fmt::print(std::cerr, "{} <input file>\n", argv[0]);
+    if (argc != 3) {
+        fmt::print(std::cerr, "{} <input file> <method>\n", argv[0]);
 
         return 1;
     }
 
     const std::string inputFile = argv[1];
+    const std::string method = argv[2];
 
     try {
         // Read the input module
@@ -22,7 +24,15 @@ int main(int argc, char *argv[]) {
 
         // Embed watermarks
         kyut::BitStreamWriter stream;
-        kyut::watermarker::extractFunctionOrdering(module, stream, 10);
+        std::size_t numBits;
+
+        if (method == "opswap") {
+            numBits = kyut::watermarker::extractOperandSwapping(module, stream);
+        } else if (method == "funcord") {
+            numBits = kyut::watermarker::extractFunctionOrdering(module, stream, 10);
+        } else {
+            throw std::runtime_error{fmt::format("unknown embedding method: {}", method)};
+        }
 
         // Output watermarks extracted
         std::cout << stream.dataAsString();
