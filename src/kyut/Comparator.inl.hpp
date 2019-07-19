@@ -34,6 +34,8 @@ namespace wasm {
     }
 
     [[nodiscard]] inline bool operator<(const Expression &a, const Expression &b) {
+        static_assert(Expression::NumExpressionIds == 36);
+
         constexpr auto opt = [](const Expression *p) -> boost::optional<const Expression &> {
             if (p == nullptr) {
                 return boost::none;

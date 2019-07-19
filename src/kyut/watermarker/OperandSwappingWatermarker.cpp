@@ -156,9 +156,9 @@ namespace kyut::watermarker {
 
             SideEffect visitSelect(wasm::Select *expr) {
                 return (std::max)({
-                    visit(expr->condition),
                     visit(expr->ifTrue),
                     visit(expr->ifFalse),
+                    visit(expr->condition),
                 });
             }
 
