@@ -439,7 +439,7 @@ namespace kyut::watermarker {
                     return (std::max)(loEffect, hiEffect);
                 }
 
-                f(*expr);
+                f(*expr, *lo, *hi);
 
                 return (std::max)(loEffect, hiEffect);
             }
@@ -587,15 +587,15 @@ namespace kyut::watermarker {
         // Embed watermarks
         const auto posStart = stream.tell();
 
-        OperandSwappingVisitor visitor{[&stream](wasm::Binary &expr) {
-            // Embed watermarks by swapping operands
-            const bool bit = stream.readBit();
-            const auto &lo = (std::min)(*expr.left, *expr.right);
+        OperandSwappingVisitor visitor{
+            [&](wasm::Binary &expr, wasm::Expression &lo, [[maybe_unused]] wasm::Expression &hi) {
+                // Embed watermarks by swapping operands
+                const bool bit = stream.readBit();
 
-            if (bit == (expr.left == &lo)) {
-                swapOperands(expr);
-            }
-        }};
+                if (bit == (expr.left == &lo)) {
+                    swapOperands(expr);
+                }
+            }};
 
         for (const auto f : functions) {
             visitor.visitFunction(f);
@@ -620,12 +620,11 @@ namespace kyut::watermarker {
         // Extract watermarks
         const auto posStart = stream.tell();
 
-        OperandSwappingVisitor visitor{[&stream](wasm::Binary &expr) {
-            // Extract watermarks from the order of operands
-            const auto &lo = (std::min)(*expr.left, *expr.right);
-
-            stream.writeBit(expr.left != &lo);
-        }};
+        OperandSwappingVisitor visitor{
+            [&](wasm::Binary &expr, wasm::Expression &lo, [[maybe_unused]] wasm::Expression &hi) {
+                // Extract watermarks from the order of operands
+                stream.writeBit(expr.left != &lo);
+            }};
 
         for (const auto f : functions) {
             visitor.visitFunction(f);
@@ -728,17 +727,23 @@ namespace wasm {
         return std::tie(a.op, *a.value) < std::tie(b.op, *b.value);
     }
     bool operator<(const wasm::Binary &a, const wasm::Binary &b) {
-        if (a.op != b.op) {
-            return a.op < b.op;
-        }
+        // Normalize expression
+        constexpr auto normalize =
+            [](const wasm::Binary &x) -> std::tuple<wasm::BinaryOp, wasm::Expression &, wasm::Expression &> {
+            if (!kyut::watermarker::isCommutative(x.op)) {
+                // Noncommutative
+                return {x.op, *x.left, *x.right};
+            }
 
-        if (!kyut::watermarker::isCommutative(a.op)) {
-            // Noncommutative
-            return std::tie(*a.left, *a.right) < std::tie(*b.left, *b.right);
-        }
+            // Commutative
+            if (*x.right < *x.left) {
+                return {*kyut::watermarker::getSwappedPredicate(x.op), *x.right, *x.left};
+            } else {
+                return {x.op, *x.left, *x.right};
+            }
+        };
 
-        // Commutative
-        return std::minmax(*a.left, *a.right) < std::minmax(*b.left, *b.right);
+        return normalize(a) < normalize(b);
     }
     bool operator<(const wasm::Select &a, const wasm::Select &b) {
         return std::tie(*a.condition, *a.ifTrue, *a.ifFalse) < std::tie(*b.condition, *b.ifTrue, *b.ifFalse);
