@@ -24,18 +24,18 @@ int main(int argc, char *argv[]) {
 
         // Embed watermarks
         kyut::BitStreamWriter stream;
-        std::size_t numBits;
 
         if (method == "opswap") {
-            numBits = kyut::watermarker::extractOperandSwapping(module, stream);
+            kyut::watermarker::extractOperandSwapping(module, stream);
         } else if (method == "funcord") {
-            numBits = kyut::watermarker::extractFunctionOrdering(module, stream, 10);
+            kyut::watermarker::extractFunctionOrdering(module, stream, 10);
         } else {
             throw std::runtime_error{fmt::format("unknown embedding method: {}", method)};
         }
 
         // Output watermarks extracted
-        std::cout << stream.dataAsString();
+        fmt::print("{}", stream.dataAsString());
+        fmt::print(std::cerr, "{} bits extracted\n", stream.tell());
     } catch (const wasm::ParseException &e) {
         e.dump(std::cerr);
 

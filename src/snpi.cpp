@@ -36,6 +36,8 @@ int main(int argc, char *argv[]) {
 
         // Output the result
         wasm::ModuleWriter{}.writeText(module, "");
+
+        fmt::print(std::cerr, "{} bits embedded\n", stream->tell());
     } catch (const wasm::ParseException &e) {
         e.dump(std::cerr);
 

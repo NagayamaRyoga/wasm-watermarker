@@ -44,10 +44,8 @@ namespace kyut {
                 return false;
             }
 
-            const auto pos = pos_read_;
-            pos_read_ = (pos_read_ + 1) % (data_.size() * 8);
-
-            return ((data_[pos / 8] << (pos % 8)) & 0x80) != 0;
+            const auto pos = pos_read_++;
+            return ((data_[pos / 8 % data_.size()] << (pos % 8)) & 0x80) != 0;
         }
 
         std::uint64_t read(std::size_t countBits) {

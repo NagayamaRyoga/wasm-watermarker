@@ -27,15 +27,15 @@ BOOST_AUTO_TEST_CASE(read_bit) {
     BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{7});
     BOOST_REQUIRE_EQUAL(reader.readBit(), true);
 
-    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{0});
+    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{8});
     BOOST_REQUIRE_EQUAL(reader.readBit(), true);
-    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{1});
+    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{9});
     BOOST_REQUIRE_EQUAL(reader.readBit(), false);
-    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{2});
+    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{10});
     BOOST_REQUIRE_EQUAL(reader.readBit(), false);
-    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{3});
+    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{11});
     BOOST_REQUIRE_EQUAL(reader.readBit(), false);
-    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{4});
+    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{12});
 }
 
 BOOST_AUTO_TEST_CASE(read) {
@@ -53,10 +53,10 @@ BOOST_AUTO_TEST_CASE(read) {
     BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{16});
     BOOST_REQUIRE_EQUAL(reader.read(16), std::uint64_t{0xcdef});
 
-    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{0});
+    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{32});
     BOOST_REQUIRE_EQUAL(reader.read(24), std::uint64_t{0x89abcd});
 
-    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{24});
+    BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{56});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
