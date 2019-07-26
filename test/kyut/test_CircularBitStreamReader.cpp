@@ -43,18 +43,18 @@ BOOST_AUTO_TEST_CASE(read) {
     CircularBitStreamReader reader{std::begin(data), std::end(data)};
 
     BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{0});
-    BOOST_REQUIRE_EQUAL(reader.read(4), std::uint64_t{0x8});
+    BOOST_REQUIRE_EQUAL(reader.read<std::uint32_t>(4), std::uint32_t{0x8});
     BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{4});
-    BOOST_REQUIRE_EQUAL(reader.read(4), std::uint64_t{0x9});
+    BOOST_REQUIRE_EQUAL(reader.read<std::uint32_t>(4), std::uint32_t{0x9});
 
     BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{8});
-    BOOST_REQUIRE_EQUAL(reader.read(8), std::uint64_t{0xab});
+    BOOST_REQUIRE_EQUAL(reader.read<std::uint32_t>(8), std::uint32_t{0xab});
 
     BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{16});
-    BOOST_REQUIRE_EQUAL(reader.read(16), std::uint64_t{0xcdef});
+    BOOST_REQUIRE_EQUAL(reader.read<std::uint32_t>(16), std::uint32_t{0xcdef});
 
     BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{32});
-    BOOST_REQUIRE_EQUAL(reader.read(24), std::uint64_t{0x89abcd});
+    BOOST_REQUIRE_EQUAL(reader.read<std::uint32_t>(24), std::uint32_t{0x89abcd});
 
     BOOST_REQUIRE_EQUAL(reader.tell(), std::size_t{56});
 }

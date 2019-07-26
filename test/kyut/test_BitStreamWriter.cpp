@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(write) {
     BOOST_REQUIRE_EQUAL(s.data().size(), std::size_t{0});
     BOOST_REQUIRE_EQUAL(s.tell(), std::size_t{0});
 
-    s.write(0xabcd, 16);
+    s.write(std::uint16_t{0xabcd}, 16);
     BOOST_REQUIRE_EQUAL(s.data().size(), std::size_t{2});
     BOOST_REQUIRE_EQUAL(s.data()[0], std::uint8_t{0xab});
     BOOST_REQUIRE_EQUAL(s.data()[1], std::uint8_t{0xcd});

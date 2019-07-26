@@ -61,7 +61,7 @@ namespace kyut::watermarker {
             std::sort(chunkBegin, chunkEnd, [](const auto &a, const auto &b) { return a->name < b->name; });
 
             // A watermark to embed in the chunk
-            auto watermark = stream.read(numBitsEmbeddedInChunk);
+            auto watermark = stream.read<std::uint64_t>(numBitsEmbeddedInChunk);
 
             // Reorder the functions
             for (auto it = chunkBegin; it != chunkEnd; ++it) {
@@ -109,8 +109,8 @@ namespace kyut::watermarker {
                 return a->name < b->name;
             });
 
-            std::int64_t watermark = 0;
-            std::int64_t base = 1;
+            std::uint64_t watermark = 0;
+            std::uint64_t base = 1;
 
             for (auto it = chunkBegin; it != chunkEnd; ++it) {
                 // Get index of the function `*it`

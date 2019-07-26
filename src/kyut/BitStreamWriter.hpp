@@ -45,8 +45,10 @@ namespace kyut {
             pos_write_++;
         }
 
-        void write(std::uint64_t value, std::size_t length) {
-            assert(length <= 64);
+        template <typename UInt>
+        void write(UInt value, std::size_t length) {
+            static_assert(std::is_unsigned_v<UInt>);
+            assert(length <= sizeof(UInt) * 8);
 
             for (std::size_t i = 0; i < length; i++) {
                 writeBit((value & (1 << (length - i - 1))) != 0);

@@ -48,8 +48,12 @@ namespace kyut {
             return ((data_[pos / 8 % data_.size()] << (pos % 8)) & 0x80) != 0;
         }
 
-        std::uint64_t read(std::size_t countBits) {
-            std::uint64_t value = 0;
+        template <typename UInt>
+        UInt read(std::size_t countBits) {
+            static_assert(std::is_unsigned_v<UInt>);
+            assert(countBits <= sizeof(UInt) * 8);
+
+            UInt value = 0;
 
             for (std::size_t i = 0; i < countBits; i++) {
                 value <<= 1;
