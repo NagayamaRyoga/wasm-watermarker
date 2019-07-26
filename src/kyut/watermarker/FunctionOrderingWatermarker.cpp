@@ -14,26 +14,6 @@ namespace kyut::watermarker {
         constexpr auto factorialBitLengthTable = std::array<std::size_t, 21>{
             0, 0, 1, 2, 4, 6, 9, 12, 15, 18, 21, 25, 28, 32, 36, 40, 44, 48, 52, 56, 61,
         };
-
-        /**
-         * @brief   Move the `element` in [begin, end) to the beginning of the range.
-         *          The order of elements other than `element` is maintained.
-         *
-         * @tparam  BidirectionalIterator   Bidirectional iterator type.
-         * @param   begin       Bidirectional iterator to the initial position in a sequence.
-         * @param   end         Bidirectional iterator to the final position in a sequence.
-         * @param   element     Bidirectional iterator to the element to be moved.
-         *                      `element` must be in the range of [begin, end).
-         */
-        template <typename BidirectionalIterator>
-        void moveToFront(BidirectionalIterator begin, BidirectionalIterator end, BidirectionalIterator element) {
-            assert(std::distance(begin, element) >= 0);
-            assert(std::distance(begin, element) < std::distance(begin, end));
-
-            auto tmp = std::move(*element);
-            std::move_backward(begin, element, std::next(element));
-            *begin = std::move(tmp);
-        }
     } // namespace
 
     std::size_t embedFunctionOrdering(wasm::Module &module, CircularBitStreamReader &stream, std::size_t maxChunkSize) {
@@ -69,7 +49,7 @@ namespace kyut::watermarker {
                 const auto n = watermark % distance;
                 watermark /= distance;
 
-                moveToFront(it, chunkEnd, it + n);
+                std::swap(*it, *(it + n));
             }
 
             numBits += numBitsEmbeddedInChunk;
@@ -112,19 +92,24 @@ namespace kyut::watermarker {
             std::uint64_t watermark = 0;
             std::uint64_t base = 1;
 
-            for (auto it = chunkBegin; it != chunkEnd; ++it) {
-                // Get index of the function `*it`
-                const auto pos = std::find_if(
-                    std::begin(functions), std::end(functions), [it](const auto &f) { return f == it->get(); });
-                assert(pos != std::end(functions));
+            auto funcBegin = std::begin(functions);
+            const auto funcEnd = std::end(functions);
 
-                const std::size_t index = std::distance(std::begin(functions), pos);
+            for (auto it = chunkBegin; it != chunkEnd; ++it) {
+                assert(std::distance(it, chunkEnd) == std::distance(funcBegin, funcEnd));
+
+                // Get index of the function `*it`
+                const auto pos = std::find_if(funcBegin, funcEnd, [it](const auto &f) { return f == it->get(); });
+                assert(pos != funcEnd);
+
+                const std::size_t index = std::distance(funcBegin, pos);
 
                 watermark += index * base;
-                base *= functions.size();
+                base *= std::distance(funcBegin, funcEnd);
 
                 // Remove the function found in this step
-                functions.erase(pos);
+                std::swap(*funcBegin, *pos);
+                ++funcBegin;
             }
 
             stream.write(watermark, numBitsEmbeddedInChunk);

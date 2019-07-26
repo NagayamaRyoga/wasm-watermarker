@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(embed_function_ordering) {
         BOOST_REQUIRE_EQUAL(module.functions[1]->name, "g2");
         BOOST_REQUIRE_EQUAL(module.functions[2]->name, "g3");
         BOOST_REQUIRE_EQUAL(module.functions[3]->name, "f3");
-        BOOST_REQUIRE_EQUAL(module.functions[4]->name, "f1");
-        BOOST_REQUIRE_EQUAL(module.functions[5]->name, "f2");
+        BOOST_REQUIRE_EQUAL(module.functions[4]->name, "f2");
+        BOOST_REQUIRE_EQUAL(module.functions[5]->name, "f1");
     }
 
     // Embed 0b11
