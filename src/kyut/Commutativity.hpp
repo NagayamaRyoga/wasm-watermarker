@@ -9,7 +9,7 @@
 namespace kyut {
     [[nodiscard]]
     inline boost::optional<wasm::BinaryOp> getSwappedPredicate(wasm::BinaryOp op) {
-        static_assert(wasm::InvalidBinary == 152);
+        static_assert(wasm::InvalidBinary == 158);
 
         switch (op) {
             // Commutative instructions

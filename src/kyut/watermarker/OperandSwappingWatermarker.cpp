@@ -88,21 +88,21 @@ namespace kyut::watermarker {
                 return SideEffect::write;
             }
 
-            SideEffect visitGetLocal([[maybe_unused]] wasm::GetLocal *expr) {
+            SideEffect visitLocalGet([[maybe_unused]] wasm::LocalGet *expr) {
                 return SideEffect::readOnly;
             }
 
-            SideEffect visitSetLocal(wasm::SetLocal *expr) {
+            SideEffect visitLocalSet(wasm::LocalSet *expr) {
                 visit(expr->value);
 
                 return SideEffect::write;
             }
 
-            SideEffect visitGetGlobal([[maybe_unused]] wasm::GetGlobal *expr) {
+            SideEffect visitGlobalGet([[maybe_unused]] wasm::GlobalGet *expr) {
                 return SideEffect::readOnly;
             }
 
-            SideEffect visitSetGlobal(wasm::SetGlobal *expr) {
+            SideEffect visitGlobalSet(wasm::GlobalSet *expr) {
                 visit(expr->value);
 
                 return SideEffect::write;
@@ -216,6 +216,10 @@ namespace kyut::watermarker {
                 return SideEffect::write;
             }
 
+            SideEffect visitAtomicFence([[maybe_unused]] wasm::AtomicFence *expr) {
+                return SideEffect::write;
+            }
+
             SideEffect visitSIMDExtract(wasm::SIMDExtract *expr) {
                 return visit(expr->vec);
             }
@@ -228,16 +232,23 @@ namespace kyut::watermarker {
                 return (std::max)(visit(expr->left), visit(expr->right));
             }
 
-            SideEffect visitSIMDBitselect(wasm::SIMDBitselect *expr) {
+            SideEffect visitSIMDTernary(wasm::SIMDTernary *expr) {
                 return (std::max)({
-                    visit(expr->cond),
-                    visit(expr->left),
-                    visit(expr->right),
+                    visit(expr->a),
+                    visit(expr->b),
+                    visit(expr->c),
                 });
             }
 
             SideEffect visitSIMDShift(wasm::SIMDShift *expr) {
                 return (std::max)(visit(expr->vec), visit(expr->shift));
+            }
+
+            SideEffect visitSIMDLoad(wasm::SIMDLoad *expr) {
+                return (std::max)({
+                    visit(expr->ptr),
+                    SideEffect::readOnly,
+                });
             }
 
             SideEffect visitMemoryInit(wasm::MemoryInit *expr) {
@@ -264,6 +275,41 @@ namespace kyut::watermarker {
                 visit(expr->dest);
                 visit(expr->value);
                 visit(expr->size);
+
+                return SideEffect::write;
+            }
+
+            SideEffect visitPush([[maybe_unused]] wasm::Push *expr) {
+                visit(expr->value);
+
+                return SideEffect::write;
+            }
+
+            SideEffect visitPop([[maybe_unused]] wasm::Pop *expr) {
+                return SideEffect::write;
+            }
+
+            SideEffect visitTry(wasm::Try *expr) {
+                return (std::max)({
+                    visit(expr->body),
+                    visit(expr->catchBody),
+                });
+            }
+
+            SideEffect visitThrow(wasm::Throw *expr) {
+                visitExpressionList(expr->operands);
+
+                return SideEffect::write;
+            }
+
+            SideEffect visitRethrow(wasm::Rethrow *expr) {
+                visit(expr->exnref);
+
+                return SideEffect::write;
+            }
+
+            SideEffect visitBrOnExn(wasm::BrOnExn *expr) {
+                visit(expr->exnref);
 
                 return SideEffect::write;
             }

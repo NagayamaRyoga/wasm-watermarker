@@ -24,7 +24,8 @@ namespace wasm {
             return a.getf64() < b.getf64();
         case v128:
             return a.getv128() < b.getv128();
-        case except_ref:
+        case anyref:
+        case exnref:
             return false;
         case unreachable:
             return false;
@@ -34,7 +35,7 @@ namespace wasm {
     }
 
     [[nodiscard]] inline bool operator<(const Expression &a, const Expression &b) {
-        static_assert(Expression::NumExpressionIds == 36);
+        static_assert(Expression::NumExpressionIds == 44);
 
         constexpr auto opt = [](const Expression *p) -> boost::optional<const Expression &> {
             if (p == nullptr) {
@@ -94,27 +95,27 @@ namespace wasm {
 
             return std::forward_as_tuple(x.operands, *x.target) < std::forward_as_tuple(y.operands, *y.target);
         }
-        case Expression::GetLocalId: {
-            const auto &x = *a.cast<GetLocal>();
-            const auto &y = *b.cast<GetLocal>();
+        case Expression::LocalGetId: {
+            const auto &x = *a.cast<LocalGet>();
+            const auto &y = *b.cast<LocalGet>();
 
             return x.index < y.index;
         }
-        case Expression::SetLocalId: {
-            const auto &x = *a.cast<SetLocal>();
-            const auto &y = *b.cast<SetLocal>();
+        case Expression::LocalSetId: {
+            const auto &x = *a.cast<LocalSet>();
+            const auto &y = *b.cast<LocalSet>();
 
             return std::tie(x.index, *x.value) < std::tie(y.index, *y.value);
         }
-        case Expression::GetGlobalId: {
-            const auto &x = *a.cast<GetGlobal>();
-            const auto &y = *b.cast<GetGlobal>();
+        case Expression::GlobalGetId: {
+            const auto &x = *a.cast<GlobalGet>();
+            const auto &y = *b.cast<GlobalGet>();
 
             return x.name < y.name;
         }
-        case Expression::SetGlobalId: {
-            const auto &x = *a.cast<SetGlobal>();
-            const auto &y = *b.cast<SetGlobal>();
+        case Expression::GlobalSetId: {
+            const auto &x = *a.cast<GlobalSet>();
+            const auto &y = *b.cast<GlobalSet>();
 
             return std::tie(*x.value, x.name) < std::tie(*y.value, y.name);
         }
@@ -221,6 +222,12 @@ namespace wasm {
 
             return std::tie(x.offset.addr, *x.ptr, *x.notifyCount) < std::tie(y.offset.addr, *y.ptr, *y.notifyCount);
         }
+        case Expression::AtomicFenceId: {
+            [[maybe_unused]] const auto &x = *a.cast<AtomicFence>();
+            [[maybe_unused]] const auto &y = *b.cast<AtomicFence>();
+
+            return false;
+        }
         case Expression::SIMDExtractId: {
             const auto &x = *a.cast<SIMDExtract>();
             const auto &y = *b.cast<SIMDExtract>();
@@ -239,17 +246,23 @@ namespace wasm {
 
             return std::tie(*x.left, *x.right, x.mask) < std::tie(*y.left, *y.right, y.mask);
         }
-        case Expression::SIMDBitselectId: {
-            const auto &x = *a.cast<SIMDBitselect>();
-            const auto &y = *b.cast<SIMDBitselect>();
+        case Expression::SIMDTernaryId: {
+            const auto &x = *a.cast<SIMDTernary>();
+            const auto &y = *b.cast<SIMDTernary>();
 
-            return std::tie(*x.left, *x.right, *x.cond) < std::tie(*y.left, *y.right, *y.cond);
+            return std::tie(*x.a, *x.b, *x.c) < std::tie(*y.a, *y.b, *y.c);
         }
         case Expression::SIMDShiftId: {
             const auto &x = *a.cast<SIMDShift>();
             const auto &y = *b.cast<SIMDShift>();
 
             return std::tie(x.op, *x.vec, *x.shift) < std::tie(y.op, *y.vec, *y.shift);
+        }
+        case Expression::SIMDLoadId: {
+            const auto &x = *a.cast<SIMDLoad>();
+            const auto &y = *b.cast<SIMDLoad>();
+
+            return std::tie(x.op, x.offset, x.align, *x.ptr) < std::tie(y.op, y.offset, y.align, *y.ptr) ;
         }
         case Expression::MemoryInitId: {
             const auto &x = *a.cast<MemoryInit>();
@@ -274,6 +287,42 @@ namespace wasm {
             const auto &y = *b.cast<MemoryFill>();
 
             return std::tie(*x.dest, *x.value, *x.size) < std::tie(*y.dest, *y.value, *y.size);
+        }
+        case Expression::PushId:{
+            const auto &x = *a.cast<Push>();
+            const auto &y = *b.cast<Push>();
+
+            return std::tie(*x.value) < std::tie(*y.value);
+        }
+        case Expression::PopId:{
+            [[maybe_unused]] const auto &x = *a.cast<Pop>();
+            [[maybe_unused]] const auto &y = *b.cast<Pop>();
+
+            return false;
+        }
+        case Expression::TryId:{
+            const auto &x = *a.cast<Try>();
+            const auto &y = *b.cast<Try>();
+
+            return std::forward_as_tuple(opt(x.body), opt(x.catchBody)) < std::forward_as_tuple(opt(y.body), opt(y.catchBody));
+        }
+        case Expression::ThrowId:{
+            const auto &x = *a.cast<Throw>();
+            const auto &y = *b.cast<Throw>();
+
+            return std::tie(x.operands) < std::tie(y.operands);
+        }
+        case Expression::RethrowId:{
+            const auto &x = *a.cast<Rethrow>();
+            const auto &y = *b.cast<Rethrow>();
+
+            return std::forward_as_tuple(opt(x.exnref)) < std::forward_as_tuple(opt(y.exnref));
+        }
+        case Expression::BrOnExnId:{
+            const auto &x = *a.cast<BrOnExn>();
+            const auto &y = *b.cast<BrOnExn>();
+
+            return std::forward_as_tuple(opt(x.exnref)) < std::forward_as_tuple(opt(y.exnref));
         }
         default:
             WASM_UNREACHABLE();
