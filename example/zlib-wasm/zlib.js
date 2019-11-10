@@ -5,7 +5,7 @@ const fs = require("fs");
 module.exports.initialize = async (wasm_path) => {
   const buff = fs.readFileSync(wasm_path);
 
-  const COMPRESSION_LEVEL = 6;
+  const COMPRESSION_LEVEL = 9;
   const NO_ZLIB_HEADER = -1;
   const CHUNK_SIZE = 32 * 1024;
   const map = {};

@@ -14,22 +14,27 @@ const rawData = Crypto.randomBytes(size);
 
   const libs = await Promise.all(libPaths.map(async path => await require('./zlib').initialize(path)));
 
+  const compressed = libs[0].deflate(rawData);
+
   // Validation
   libs.forEach((Zlib, i) => {
-    assert.deepEqual(Zlib.inflate(Zlib.deflate(rawData)), rawData, libPaths[i]);
+    assert.deepEqual(Zlib.deflate(rawData), compressed, `${libPaths[i]} - .deflate()`);
+    assert.deepEqual(Zlib.inflate(compressed), rawData, `${libPaths[i]} - .inflate()`);
   });
 
-  // Warming up
+  console.log(`raw size: ${rawData.length}bytes`);
+  console.log(`deflated size: ${compressed.length}bytes`);
+  console.log(`compression rate: ${(compressed.length / rawData.length * 100).toFixed(1)}%`)
+
   libs.forEach((Zlib, i) => {
+    // Warming up
     console.time(`Warm - ${libPaths[i]}`);
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       Zlib.deflate(rawData);
     }
     console.timeEnd(`Warm - ${libPaths[i]}`);
-  });
 
-  // Benchmark
-  libs.forEach((Zlib, i) => {
+    // Benchmark
     console.time(`Benchmark - ${libPaths[i]}`);
     for (let i = 0; i < 100; i++) {
       Zlib.deflate(rawData);
