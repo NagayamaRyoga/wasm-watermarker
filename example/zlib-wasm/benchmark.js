@@ -7,6 +7,9 @@ const rawData = Crypto.randomBytes(size);
 (async function () {
   const libPaths = [
     './zlib-sample.wasm',
+    './zlib-funcord.wasm',
+    './zlib-opswap.wasm',
+    './zlib-funcord-opswap.wasm',
   ];
 
   const libs = await Promise.all(libPaths.map(async path => await require('./zlib').initialize(path)));
