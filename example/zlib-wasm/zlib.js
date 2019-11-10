@@ -1,11 +1,9 @@
 "use strict";
 
 const fs = require("fs");
-const buff = fs.readFileSync("build/zlib-sample.wasm");
-let ret;
 
-module.exports.initialize = async () => {
-  if (ret) return ret;
+module.exports.initialize = async (wasm_path) => {
+  const buff = fs.readFileSync(wasm_path);
 
   const COMPRESSION_LEVEL = 6;
   const NO_ZLIB_HEADER = -1;
@@ -62,7 +60,7 @@ module.exports.initialize = async () => {
     }
 
     getBuffer() {
-      return new Buffer(this.buff.buffer, 0, this.offset);
+      return Buffer.from(this.buff.buffer, 0, this.offset);
     }
   }
 
@@ -97,11 +95,11 @@ module.exports.initialize = async () => {
     }
 
     getBuffer() {
-      return new Buffer(this.buff.buffer, 0, this.offset);
+      return Buffer.from(this.buff.buffer, 0, this.offset);
     }
   }
-  
-  ret = {
+
+  const ret = {
     inflate(rawDeflateBuffer) {
       const rawInf = new RawInf();
       for (let offset = 0; offset < rawDeflateBuffer.length; offset += CHUNK_SIZE) {
