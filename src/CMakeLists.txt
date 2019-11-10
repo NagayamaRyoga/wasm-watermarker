@@ -23,3 +23,11 @@ add_executable(pisn
 target_link_libraries(pisn
     kyut
 )
+
+add_executable(funccnt
+    funccnt.cpp
+)
+
+target_link_libraries(funccnt
+    kyut
+)
