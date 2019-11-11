@@ -1,0 +1,4 @@
+zlib-1-*.wasm
+zlib-2-*.wasm
+zlib-3-*.wasm
+*.wast
