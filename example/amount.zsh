@@ -5,7 +5,7 @@ path=("$PWD/../build/src" $path[@])
 wasms=(
     $PWD/styled-jsx/mappings.wasm
     $PWD/zlib-wasm/zlib-sample.wasm
-    $PWD/ammo/ammo.wasm.wasm
+    $PWD/ammo.js/ammo.js/builds/ammo.wasm.wasm
 )
 
 echo "name, size[B], funcs, opswap[bit], funcord[bit]"

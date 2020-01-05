@@ -1,0 +1,3 @@
+[submodule "example/ammo.js/ammo.js"]
+	path = example/ammo.js/ammo.js
+	url = git://github.com/kripken/ammo.js.git
