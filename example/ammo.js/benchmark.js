@@ -19,18 +19,18 @@ const stress = require("./stress");
 
   const wasms = [
     "ammo.js/builds",
-    "ammo-1-0c9c85c7",
-    "ammo-1-0d97880d",
-    "ammo-1-60b725f1",
-    "ammo-1-fe8191b3",
-    "ammo-2-0c9c85c7",
-    "ammo-2-0d97880d",
-    "ammo-2-60b725f1",
-    "ammo-2-fe8191b3",
-    "ammo-3-0c9c85c7",
-    "ammo-3-0d97880d",
-    "ammo-3-60b725f1",
-    "ammo-3-fe8191b3"
+    "dist/ammo-1-0c9c85c7",
+    "dist/ammo-1-0d97880d",
+    "dist/ammo-1-60b725f1",
+    "dist/ammo-1-fe8191b3",
+    "dist/ammo-2-0c9c85c7",
+    "dist/ammo-2-0d97880d",
+    "dist/ammo-2-60b725f1",
+    "dist/ammo-2-fe8191b3",
+    "dist/ammo-3-0c9c85c7",
+    "dist/ammo-3-0d97880d",
+    "dist/ammo-3-60b725f1",
+    "dist/ammo-3-fe8191b3"
   ];
 
   for (wasm of wasms) {

@@ -9,36 +9,43 @@ W4 := fe8191b3
 SRC := zlib-sample.wasm
 
 TARGETS := \
-	zlib-1-${W1}.wasm \
-	zlib-2-${W1}.wasm \
-	zlib-3-${W1}.wasm \
-	zlib-1-${W2}.wasm \
-	zlib-2-${W2}.wasm \
-	zlib-3-${W2}.wasm \
-	zlib-1-${W3}.wasm \
-	zlib-2-${W3}.wasm \
-	zlib-3-${W3}.wasm \
-	zlib-1-${W4}.wasm \
-	zlib-2-${W4}.wasm \
-	zlib-3-${W4}.wasm
+	dist/zlib-1-${W1}.wasm \
+	dist/zlib-2-${W1}.wasm \
+	dist/zlib-3-${W1}.wasm \
+	dist/zlib-1-${W2}.wasm \
+	dist/zlib-2-${W2}.wasm \
+	dist/zlib-3-${W2}.wasm \
+	dist/zlib-1-${W3}.wasm \
+	dist/zlib-2-${W3}.wasm \
+	dist/zlib-3-${W3}.wasm \
+	dist/zlib-1-${W4}.wasm \
+	dist/zlib-2-${W4}.wasm \
+	dist/zlib-3-${W4}.wasm
 
 all: ${TARGETS}
+
+bench: all
 	node benchmark.js
 
-zlib-1-%.wasm: zlib-sample.wasm
-	${SNPI} $< funcord ${@:zlib-1-%.wasm=%} > ${@:%.wasm=%.wast}
+dist/zlib-1-%.wasm: zlib-sample.wasm
+	@mkdir -p ${@D}
+	${SNPI} $< funcord ${@:dist/zlib-1-%.wasm=%} > ${@:%.wasm=%.wast}
 	${AS} ${@:%.wasm=%.wast} -o $@
 	${RM} ${@:%.wasm=%.wast}
 
-zlib-2-%.wasm: zlib-sample.wasm
-	${SNPI} $< opswap ${@:zlib-2-%.wasm=%} > ${@:%.wasm=%.wast}
+dist/zlib-2-%.wasm: zlib-sample.wasm
+	@mkdir -p ${@D}
+	${SNPI} $< opswap ${@:dist/zlib-2-%.wasm=%} > ${@:%.wasm=%.wast}
 	${AS} ${@:%.wasm=%.wast} -o $@
 	${RM} ${@:%.wasm=%.wast}
 
-zlib-3-%.wasm: zlib-1-%.wasm
-	${SNPI} $< opswap ${@:zlib-3-%.wasm=%} > ${@:%.wasm=%.wast}
+dist/zlib-3-%.wasm: dist/zlib-1-%.wasm
+	@mkdir -p ${@D}
+	${SNPI} $< opswap ${@:dist/zlib-3-%.wasm=%} > ${@:%.wasm=%.wast}
 	${AS} ${@:%.wasm=%.wast} -o $@
 	${RM} ${@:%.wasm=%.wast}
 
 clean:
-	${RM} zlib-1-*.wasm zlib-2-*.wasm zlib-3-*.wasm *.wast
+	${RM} dist
+
+.PHONY: all bench clean
