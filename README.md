@@ -1,6 +1,6 @@
 # Wasm Watermarker
 
-WebAssembly に対する電子透かし埋め込み器
+Software Watermark Embedder for WebAssembly
 
 ## Environment
 
