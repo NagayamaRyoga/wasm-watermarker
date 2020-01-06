@@ -1,33 +1,6 @@
 // From ammo.js/tests/stress.js
 function stress(Ammo) {
   // Stress test
-
-  var TEST_MEMORY = 0;
-
-  var readMemoryCeiling, malloc;
-  if (TEST_MEMORY) {
-    (function() {
-      try {
-        STATICTOP;
-        readMemoryCeiling = function() {
-          return STATICTOP + _sbrk.DATASIZE;
-        };
-        malloc = _malloc;
-      } catch (e) {
-        var mapping = getClosureMapping();
-        var key = "0";
-        readMemoryCeiling = eval(
-          "(function() { return " +
-            mapping["STATICTOP"] +
-            " + " +
-            mapping["_sbrk$DATASIZE"] +
-            " })"
-        );
-        malloc = eval(mapping["_malloc"]);
-      }
-    })();
-  }
-
   function benchmark() {
     var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
     var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
@@ -100,58 +73,19 @@ function stress(Ammo) {
       bodies.push(body);
     });
 
-    var memoryStart;
-
     var startTime = Date.now();
-
-    if (TEST_MEMORY) malloc(5 * 1024 * 1024); // stress memory usage
 
     var NUM = 150000;
 
     for (var i = 0; i < NUM; i++) {
-      if (i === 250 && TEST_MEMORY) memoryStart = readMemoryCeiling();
-
       dynamicsWorld.stepSimulation(1 / 60, 10);
     }
 
     var endTime = Date.now();
-
-    if (TEST_MEMORY)
-      assertEq(
-        readMemoryCeiling(),
-        memoryStart,
-        "Memory ceiling must remain stable!"
-      );
-
-    print("total time: " + ((endTime - startTime) / 1000).toFixed(3));
+    return (endTime - startTime) / 1000;
   }
 
-  function testDestroy() {
-    var NUM = 1000; // enough to force an increase in the memory ceiling
-    var vec = new Ammo.btVector3(4, 5, 6);
-    var memoryStart = readMemoryCeiling();
-    for (var i = 0; i < NUM; i++) {
-      Ammo.destroy(vec);
-      vec = new Ammo.btVector3(4, 5, 6);
-    }
-    Ammo.destroy(vec);
-    assertEq(
-      readMemoryCeiling(),
-      memoryStart,
-      "Memory ceiling must remain stable!"
-    );
-    for (var i = 0; i < NUM; i++) {
-      vec = new Ammo.btVector3(4, 5, 6);
-    }
-    assertNeq(
-      readMemoryCeiling(),
-      memoryStart,
-      "Memory ceiling must increase without destroy()!"
-    );
-  }
-
-  benchmark();
-  if (TEST_MEMORY) testDestroy();
+  return benchmark();
 }
 
 module.exports = stress;
