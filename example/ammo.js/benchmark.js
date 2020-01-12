@@ -1,26 +1,16 @@
 require("./testutils");
 const stress = require("./stress");
 
-const WARM = 3;
-const N = 10 + WARM;
-
 (async () => {
   const runBench = dir => {
     const Ammo = require(`./${dir}/ammo.wasm`);
 
     return new Promise(resolve => {
-      console.error(`${dir}`);
-
       // Wrap `Ammo()` by real `Promise` object because it returns just Promise-like object
       // and awaiting it acts buggy.
       Ammo().then(Ammo => {
-        const durs = [];
-        for (let i = 0; i < N; i++) {
-          const dur = stress(Ammo);
-          durs.push(dur);
-          console.error(dur);
-        }
-        resolve({ dir, durs });
+        const dur = stress(Ammo);
+        resolve(dur);
       });
     });
   };
@@ -41,10 +31,10 @@ const N = 10 + WARM;
     "dist/ammo-3-fe8191b3"
   ];
 
-  const results = [];
-  for (wasm of wasms) {
-    results.push(await runBench(wasm));
+  const row = [];
+  const keys = [...wasms.keys()].sort(() => Math.random() - 0.5);
+  for (const i of keys) {
+    row[i] = await runBench(wasms[i]);
   }
-
-  console.log(JSON.stringify(results));
+  console.log(row.join("\t"));
 })();

@@ -1,7 +1,7 @@
 const Crypto = require("crypto");
 const assert = require("assert");
 
-const size = 1_000_000;
+const size = 10_000_000;
 const rawData = Crypto.randomBytes(size);
 
 (async function() {
@@ -49,19 +49,18 @@ const rawData = Crypto.randomBytes(size);
   console.log(`deflated size: ${compressed.length}bytes`);
   console.log(`compression rate: ${(compressionRate * 100).toFixed(1)}%`);
 
-  libs.forEach((Zlib, i) => {
-    // Warming up
-    console.time(`Warm - ${libPaths[i]}`);
-    for (let i = 0; i < 10; i++) {
-      Zlib.deflate(rawData);
-    }
-    console.timeEnd(`Warm - ${libPaths[i]}`);
+  console.log(libPaths.join("\t"));
 
-    // Benchmark
-    console.time(`Benchmark - ${libPaths[i]}`);
-    for (let i = 0; i < 100; i++) {
-      Zlib.deflate(rawData);
-    }
-    console.timeEnd(`Benchmark - ${libPaths[i]}`);
-  });
+  for (let i = 0; i < 100; i++) {
+    const keys = [...libs.keys()].sort(() => Math.random() - 0.5);
+    const row = [];
+
+    keys.forEach(i => {
+      const start = Date.now();
+      libs[i].deflate(rawData);
+      const end = Date.now();
+      row[i] = end - start;
+    });
+    console.log(row.join("\t"));
+  }
 })();
