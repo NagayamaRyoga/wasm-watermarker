@@ -18,8 +18,10 @@ project(wasm-watermarker VERSION 0.1.0 LANGUAGES CXX)
 
 enable_testing()
 
+find_package(Threads)
 include(ExternalProject)
 include(cmake/boost.cmake)
+include(cmake/binaryen.cmake)
 include(cmake/fmt.cmake)
 include(cmake/googletest.cmake)
 

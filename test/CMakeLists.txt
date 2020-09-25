@@ -5,6 +5,7 @@ add_executable(test_kyut
 )
 
 target_link_libraries(test_kyut
+    Threads::Threads
     fmtlib::fmt
     googletest::gtest
     googletest::gtest_main

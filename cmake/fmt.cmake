@@ -13,7 +13,6 @@ ExternalProject_Add(fmt
         -DCMAKE_BUILD_TYPE=Release
         -DFMT_DOC=OFF
         -DFMT_TEST=OFF
-
 )
 
 ExternalProject_Get_Property(fmt source_dir)
