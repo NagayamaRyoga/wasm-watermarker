@@ -18,7 +18,10 @@ project(wasm-watermarker VERSION 0.1.0 LANGUAGES CXX)
 
 enable_testing()
 
-find_package(Boost 1.65.0 REQUIRED)
-include_directories(${Boost_INCLUDE_DIR})
+include(ExternalProject)
+include(cmake/boost.cmake)
+include(cmake/fmt.cmake)
+include(cmake/googletest.cmake)
 
 add_subdirectory(src)
+add_subdirectory(test)
