@@ -1,0 +1,24 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+AccessModifierOffset: -4
+AlignAfterOpenBracket: AlwaysBreak
+AllowShortFunctionsOnASingleLine: None
+AlwaysBreakBeforeMultilineStrings: true
+BinPackArguments: false
+BinPackParameters: false
+BreakConstructorInitializersBeforeComma: true
+BreakInheritanceList: BeforeComma
+ColumnLimit: 0
+CommentPragmas: ^
+IncludeCategories:
+  - Regex:      '^<(cassert|cctype|cerrno|clocale|cmath|cstddef|cstdlib|cstdint|cstdio|cstring)'
+    Priority:   1
+  - Regex:      '^<experimental/'
+    Priority:   3
+  - Regex:      '^(<|")(boost|fmt|gtest|llvm)/'
+    Priority:   4
+  - Regex:      '^<'
+    Priority:   2
+IndentCaseLabels: true
+NamespaceIndentation: All
+PointerAlignment: Left
