@@ -1,5 +1,6 @@
 #include <fmt/printf.h>
 #include "cmdline.h"
+#include "kyut/methods/ExportOrdering.hpp"
 #include "kyut/methods/FunctionOrdering.hpp"
 #include "support/colors.h"
 #include "wasm-io.h"
@@ -16,7 +17,7 @@ int main(int argc, char* argv[]) {
     options.add("version", 'v', "Print version");
 
     options.add<std::string>("output", 'o', "Output filename", true);
-    options.add<std::string>("method", 'm', "Embedding method (function-ordering)", true, "", cmdline::oneof<std::string>("function-ordering"));
+    options.add<std::string>("method", 'm', "Embedding method (function-ordering, export-ordering)", true, "", cmdline::oneof<std::string>("function-ordering", "export-ordering"));
     options.add<std::string>("watermark", 'w', "Watermark to embed", true);
     options.add<std::size_t>("chunk-size", 'c', "Chunk size [2~20]", false, 20, cmdline::range<std::size_t>(2, 20));
 
@@ -69,12 +70,14 @@ int main(int argc, char* argv[]) {
         std::size_t size_bits;
         if (method == "function-ordering") {
             size_bits = kyut::methods::function_ordering::embed(r, module, chunk_size);
+        } else if (method == "export-ordering") {
+            size_bits = kyut::methods::export_ordering::embed(r, module, chunk_size);
         } else {
             WASM_UNREACHABLE(("unknown method: " + method).c_str());
         }
 
         Colors::setEnabled(false);
-        wasm::ModuleWriter{}.writeText(module, output);
+        wasm::ModuleWriter{}.writeBinary(module, output);
 
         fmt::print("{} bits\n", size_bits);
     } catch (const std::exception& e) {
