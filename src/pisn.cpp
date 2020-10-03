@@ -2,7 +2,7 @@
 #include "cmdline.h"
 
 namespace {
-    const std::string program_name = "snpi";
+    const std::string program_name = "pisn";
     const std::string version = "0.1.0";
 } // namespace
 
@@ -12,7 +12,6 @@ int main(int argc, char* argv[]) {
     options.add("help", 'h', "Print help message");
     options.add("version", 'v', "Print version");
 
-    options.add<std::string>("output", 'o', "Output filename", true);
     options.add<std::string>("method", 'm', "Embedding method (function-ordering)", true, "", cmdline::oneof<std::string>("function-ordering"));
     options.add<std::size_t>("chunk-size", 'c', "Chunk size [2~20]", false, 20, cmdline::range<std::size_t>(2, 20));
 
@@ -37,7 +36,6 @@ int main(int argc, char* argv[]) {
     }
 
     const auto input = options.rest()[0];
-    const auto output = options.get<std::string>("output");
     const auto method = options.get<std::string>("method");
     const auto chunk_size = options.get<std::size_t>("chunk-size");
 

@@ -22,6 +22,7 @@ find_package(Threads)
 include(ExternalProject)
 include(cmake/boost.cmake)
 include(cmake/binaryen.cmake)
+include(cmake/cmdline.cmake)
 include(cmake/fmt.cmake)
 include(cmake/googletest.cmake)
 
