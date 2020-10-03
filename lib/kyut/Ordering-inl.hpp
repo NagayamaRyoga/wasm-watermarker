@@ -55,9 +55,9 @@ namespace kyut {
 
             std::size_t size_bits = 0;
             for (std::size_t i = 0; i < count; i += chunk_size) {
-                const std::size_t chunk_size = (std::min)(chunk_size, count - i);
+                const std::size_t n = (std::min)(chunk_size, count - i);
                 const auto chunk_begin = begin + i;
-                const auto chunk_end = chunk_begin + chunk_size;
+                const auto chunk_end = chunk_begin + n;
 
                 size_bits += embed_in_chunk(r, chunk_begin, chunk_end, less);
             }
@@ -127,9 +127,9 @@ namespace kyut {
 
             std::size_t size_bits = 0;
             for (std::size_t i = 0; i < count; i += chunk_size) {
-                const std::size_t chunk_size = (std::min)(chunk_size, count - i);
+                const std::size_t n = (std::min)(chunk_size, count - i);
                 const auto chunk_begin = begin + i;
-                const auto chunk_end = chunk_begin + chunk_size;
+                const auto chunk_end = chunk_begin + n;
 
                 size_bits += extract_from_chunk(w, chunk_begin, chunk_end, less);
             }
