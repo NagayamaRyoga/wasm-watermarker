@@ -70,3 +70,41 @@ TEST(kyut_Ordering, extract_by_ordering) {
     check_extract("1324", 20, 4, "\x40"sv);
     check_extract("2314", 20, 4, "\x50"sv);
 }
+
+namespace {
+    void check_embed_then_extract(
+        std::string data,
+        std::string_view watermark_embedding,
+        std::size_t chunk_size,
+        std::size_t expected_size_bits,
+        std::string_view expected_watermark_extracted) {
+        kyut::CircularBitStreamReader r{watermark_embedding};
+
+        const auto size_bits_embedded = kyut::embed_by_ordering(
+            r,
+            chunk_size,
+            std::begin(data),
+            std::end(data),
+            std::less<>{});
+
+        EXPECT_EQ(size_bits_embedded, expected_size_bits);
+
+        kyut::BitStreamWriter w{};
+
+        const auto size_bits_extracted = kyut::extract_by_ordering(
+            w,
+            chunk_size,
+            std::begin(data),
+            std::end(data),
+            std::less<>{});
+
+        EXPECT_EQ(size_bits_extracted, expected_size_bits);
+        EXPECT_EQ(w.data_as_str(), expected_watermark_extracted);
+    }
+} // namespace
+
+TEST(kyut_Ordering, embed_then_extract) {
+    using namespace std::string_view_literals;
+
+    check_embed_then_extract("1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv", "Test"sv, 15, 40 * 3 + 32, "TestTestTestTestTes"sv);
+}
