@@ -38,3 +38,35 @@ TEST(kyut_Ordering, embed_by_ordering) {
     check_embed("2314", "\x50"sv, 20, 4, "2314");
     check_embed("2314", "\x00"sv, 20, 4, "1234");
 }
+
+namespace {
+    void check_extract(
+        std::string data,
+        std::size_t chunk_size,
+        std::size_t expected_size_bits_extracted,
+        std::string_view expected_watermark_extracted) {
+        kyut::BitStreamWriter w{};
+
+        const auto size_bits = kyut::extract_by_ordering(
+            w,
+            chunk_size,
+            std::begin(data),
+            std::end(data),
+            std::less<>{});
+
+        EXPECT_EQ(size_bits, expected_size_bits_extracted);
+        EXPECT_EQ(w.position_bits(), size_bits);
+        EXPECT_EQ(w.data_as_str(), expected_watermark_extracted);
+    }
+} // namespace
+
+TEST(kyut_Ordering, extract_by_ordering) {
+    using namespace std::string_view_literals;
+
+    check_extract("1234", 20, 4, "\x00"sv);
+    check_extract("2134", 20, 4, "\x10"sv);
+    check_extract("3214", 20, 4, "\x20"sv);
+    check_extract("4231", 20, 4, "\x30"sv);
+    check_extract("1324", 20, 4, "\x40"sv);
+    check_extract("2314", 20, 4, "\x50"sv);
+}
