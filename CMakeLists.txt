@@ -26,5 +26,6 @@ include(cmake/cmdline.cmake)
 include(cmake/fmt.cmake)
 include(cmake/googletest.cmake)
 
+add_subdirectory(lib)
 add_subdirectory(src)
 add_subdirectory(test)

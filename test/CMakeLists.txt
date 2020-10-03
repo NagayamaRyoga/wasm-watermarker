@@ -1,12 +1,12 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/test")
 
 add_executable(test_kyut
-    test_kyut.cpp
+    test_BitStreamWriter.cpp
 )
 
 target_link_libraries(test_kyut
+    kyut
     Threads::Threads
-    fmtlib::fmt
     googletest::gtest
     googletest::gtest_main
 )
