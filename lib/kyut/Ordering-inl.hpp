@@ -108,6 +108,8 @@ namespace kyut {
             }
 
             const auto bit_width = factorial_bit_width_table[count];
+
+            assert(watermark < (std::uint64_t{1} << bit_width));
             w.write(watermark, bit_width);
 
             return bit_width;

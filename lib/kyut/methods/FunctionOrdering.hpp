@@ -9,8 +9,8 @@ namespace kyut {
     class BitStreamWriter;
 } // namespace kyut
 
-namespace kyut::methods {
-    std::size_t embed_by_function_ordering(CircularBitStreamReader& r, wasm::Module& module, std::size_t chunk_size) {
+namespace kyut::methods::function_ordering {
+    std::size_t embed(CircularBitStreamReader& r, wasm::Module& module, std::size_t chunk_size) {
         const auto begin = std::begin(module.functions);
         const auto end = std::end(module.functions);
 
@@ -18,7 +18,7 @@ namespace kyut::methods {
             return f->body == nullptr;
         });
 
-        return embed_by_ordering(
+        const auto size_bits = embed_by_ordering(
             r,
             chunk_size,
             start,
@@ -26,7 +26,9 @@ namespace kyut::methods {
             [](const auto& a, const auto& b) {
                 return a->name < b->name;
             });
+
+        return size_bits;
     }
-} // namespace kyut::methods
+} // namespace kyut::methods::function_ordering
 
 #endif // INCLUDE_kyut_methods_FunctionOrdering_hpp

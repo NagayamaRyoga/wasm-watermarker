@@ -57,17 +57,17 @@ int main(int argc, char* argv[]) {
     const auto output = options.get<std::string>("output");
     const auto method = options.get<std::string>("method");
     const auto watermark = options.get<std::string>("watermark");
-    [[maybe_unused]] const auto chunk_size = options.get<std::size_t>("chunk-size");
+    const auto chunk_size = options.get<std::size_t>("chunk-size");
 
     try {
-        kyut::CircularBitStreamReader r{watermark};
-
         wasm::Module module{};
         wasm::ModuleReader{}.read(input, module);
 
+        kyut::CircularBitStreamReader r{watermark};
+
         std::size_t size_bits;
         if (method == "function-ordering") {
-            size_bits = kyut::methods::embed_by_function_ordering(r, module, chunk_size);
+            size_bits = kyut::methods::function_ordering::embed(r, module, chunk_size);
         } else {
             WASM_UNREACHABLE(("unknown method: " + method).c_str());
         }
