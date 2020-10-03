@@ -12,11 +12,13 @@ namespace kyut {
         explicit CircularBitStreamReader(std::vector<std::uint8_t>&& data)
             : data_(std::move(data))
             , pos_bits_(0) {
+            assert(data_.size() > 0);
         }
 
         explicit CircularBitStreamReader(std::string_view data)
             : data_(reinterpret_cast<const std::uint8_t*>(data.data()), reinterpret_cast<const std::uint8_t*>(data.data() + data.size()))
             , pos_bits_(0) {
+            assert(data_.size() > 0);
         }
 
         // Uncopyable and unmovable
