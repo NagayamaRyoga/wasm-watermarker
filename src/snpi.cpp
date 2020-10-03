@@ -1,6 +1,7 @@
 #include <fmt/printf.h>
 #include "cmdline.h"
 #include "kyut/methods/FunctionOrdering.hpp"
+#include "support/colors.h"
 #include "wasm-io.h"
 
 namespace {
@@ -72,7 +73,8 @@ int main(int argc, char* argv[]) {
             WASM_UNREACHABLE(("unknown method: " + method).c_str());
         }
 
-        wasm::ModuleWriter{}.write(module, output);
+        Colors::setEnabled(false);
+        wasm::ModuleWriter{}.writeText(module, output);
 
         fmt::print("{} bits\n", size_bits);
     } catch (const std::exception& e) {

@@ -1,5 +1,6 @@
 #include <fmt/printf.h>
 #include "cmdline.h"
+#include "kyut/methods/FunctionOrdering.hpp"
 #include "wasm-io.h"
 
 namespace {
@@ -15,6 +16,7 @@ int main(int argc, char* argv[]) {
 
     options.add<std::string>("method", 'm', "Embedding method (function-ordering)", true, "", cmdline::oneof<std::string>("function-ordering"));
     options.add<std::size_t>("chunk-size", 'c', "Chunk size [2~20]", false, 20, cmdline::range<std::size_t>(2, 20));
+    options.add<std::string>("dump", 0, "Output format (ascii, hex)", false, "ascii", cmdline::oneof<std::string>("ascii", "hex"));
 
     options.set_program_name(program_name);
     options.footer("filename");
@@ -38,11 +40,33 @@ int main(int argc, char* argv[]) {
 
     const auto input = options.rest()[0];
     const auto method = options.get<std::string>("method");
-    [[maybe_unused]] const auto chunk_size = options.get<std::size_t>("chunk-size");
+    const auto chunk_size = options.get<std::size_t>("chunk-size");
+    const auto dump_format = options.get<std::string>("dump");
 
     try {
         wasm::Module module{};
         wasm::ModuleReader{}.read(input, module);
+
+        kyut::BitStreamWriter w{};
+
+        std::size_t size_bits;
+        if (method == "function-ordering") {
+            size_bits = kyut::methods::function_ordering::extract(w, module, chunk_size);
+        } else {
+            WASM_UNREACHABLE(("unknown method: " + method).c_str());
+        }
+
+        fmt::print("{} bits\n", size_bits);
+
+        if (dump_format == "ascii") {
+            fmt::print("{}", w.data_as_str());
+        } else if (dump_format == "hex") {
+            for (const auto& byte : w.data()) {
+                fmt::print("{:02X}", byte);
+            }
+        } else {
+            WASM_UNREACHABLE(("unknown dump format: " + dump_format).c_str());
+        }
     } catch (const std::exception& e) {
         fmt::print(std::cerr, "error: {}\n", e.what());
         std::exit(EXIT_FAILURE);

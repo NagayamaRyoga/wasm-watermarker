@@ -94,7 +94,7 @@ namespace kyut {
             for (std::size_t i = 0; i < count; i++) {
                 const auto it = std::begin(chunk) + i;
 
-                // Find the position of `it`.
+                // Find the position of `begin + i`.
                 const auto found = std::find(it, std::end(chunk), begin + i);
                 assert(found != std::end(chunk));
 
