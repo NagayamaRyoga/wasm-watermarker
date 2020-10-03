@@ -2,6 +2,7 @@
 #define INCLUDE_kyut_BitStreamWriter_hpp
 
 #include <cassert>
+#include <cstdint>
 #include <string_view>
 #include <vector>
 
