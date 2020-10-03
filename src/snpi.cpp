@@ -1,5 +1,6 @@
 #include <fmt/printf.h>
 #include "cmdline.h"
+#include "wasm-io.h"
 
 namespace {
     const std::string program_name = "snpi";
@@ -39,7 +40,16 @@ int main(int argc, char* argv[]) {
     const auto input = options.rest()[0];
     const auto output = options.get<std::string>("output");
     const auto method = options.get<std::string>("method");
-    const auto chunk_size = options.get<std::size_t>("chunk-size");
+    [[maybe_unused]] const auto chunk_size = options.get<std::size_t>("chunk-size");
 
-    (void)chunk_size;
+    try {
+        wasm::Module module{};
+        wasm::ModuleReader{}.read(input, module);
+    } catch (const std::exception& e) {
+        fmt::print(std::cerr, "error: {}\n", e.what());
+        std::exit(EXIT_FAILURE);
+    } catch (const wasm::ParseException& e) {
+        e.dump(std::cerr);
+        std::exit(EXIT_FAILURE);
+    }
 }

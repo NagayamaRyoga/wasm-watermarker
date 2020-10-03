@@ -4,6 +4,7 @@ add_executable(snpi
 
 target_link_libraries(snpi
     cmdline::cmdline
+    binaryen::binaryen
     fmtlib::fmt
 )
 
@@ -13,5 +14,6 @@ add_executable(pisn
 
 target_link_libraries(pisn
     cmdline::cmdline
+    binaryen::binaryen
     fmtlib::fmt
 )
