@@ -1,5 +1,6 @@
 #include <fmt/printf.h>
 #include "cmdline.h"
+#include "kyut/methods/FunctionOrdering.hpp"
 #include "wasm-io.h"
 
 namespace {
@@ -15,6 +16,7 @@ int main(int argc, char* argv[]) {
 
     options.add<std::string>("output", 'o', "Output filename", true);
     options.add<std::string>("method", 'm', "Embedding method (function-ordering)", true, "", cmdline::oneof<std::string>("function-ordering"));
+    options.add<std::string>("watermark", 'w', "Watermark to embed", true);
     options.add<std::size_t>("chunk-size", 'c', "Chunk size [2~20]", false, 20, cmdline::range<std::size_t>(2, 20));
 
     options.set_program_name(program_name);
@@ -30,9 +32,23 @@ int main(int argc, char* argv[]) {
         std::exit(EXIT_SUCCESS);
     }
 
-    if (options.rest().empty()) {
+    if (options.get<std::string>("watermark").empty()) {
+        // Zero-length watermark.
+        fmt::print(std::cerr, "no watermark\n");
+        fmt::print(std::cerr, "{}", options.usage());
+        std::exit(EXIT_FAILURE);
+    }
+
+    if (options.rest().size() == 0) {
         // No input file specified.
         fmt::print(std::cerr, "no input file\n");
+        fmt::print(std::cerr, "{}", options.usage());
+        std::exit(EXIT_FAILURE);
+    }
+
+    if (options.rest().size() > 1) {
+        // Too many input files.
+        fmt::print(std::cerr, "too many input files\n");
         fmt::print(std::cerr, "{}", options.usage());
         std::exit(EXIT_FAILURE);
     }
@@ -40,11 +56,25 @@ int main(int argc, char* argv[]) {
     const auto input = options.rest()[0];
     const auto output = options.get<std::string>("output");
     const auto method = options.get<std::string>("method");
+    const auto watermark = options.get<std::string>("watermark");
     [[maybe_unused]] const auto chunk_size = options.get<std::size_t>("chunk-size");
 
     try {
+        kyut::CircularBitStreamReader r{watermark};
+
         wasm::Module module{};
         wasm::ModuleReader{}.read(input, module);
+
+        std::size_t size_bits;
+        if (method == "function-ordering") {
+            size_bits = kyut::methods::embed_by_function_ordering(r, module, chunk_size);
+        } else {
+            WASM_UNREACHABLE(("unknown method: " + method).c_str());
+        }
+
+        wasm::ModuleWriter{}.write(module, output);
+
+        fmt::print("{} bits\n", size_bits);
     } catch (const std::exception& e) {
         fmt::print(std::cerr, "error: {}\n", e.what());
         std::exit(EXIT_FAILURE);
