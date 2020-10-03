@@ -22,14 +22,15 @@ namespace kyut {
             assert(std::distance(begin, end) >= 0);
             assert(std::distance(begin, end) <= std::ptrdiff_t{max_chunk_size});
 
-            const std::size_t count = std::distance(begin, end);
-            const auto bit_width = factorial_bit_width_table[count];
-            std::uint64_t watermark = r.read(bit_width);
-
             // Sort the chunk.
             std::sort(begin, end, less);
 
             // Embed watermark.
+            const std::size_t count = std::distance(begin, end);
+            const std::size_t bit_width = factorial_bit_width_table[count];
+
+            std::uint64_t watermark = r.read(bit_width);
+
             for (std::size_t i = 0; i < count; i++) {
                 const std::uint64_t w = watermark % (count - i);
                 watermark /= (count - i);
@@ -74,11 +75,9 @@ namespace kyut {
             assert(std::distance(begin, end) >= 0);
             assert(std::distance(begin, end) <= std::ptrdiff_t{max_chunk_size});
 
-            const std::size_t count = std::distance(begin, end);
-
             // Sort the chunk.
             std::vector<RandomAccessIterator> chunk{};
-            chunk.reserve(count);
+            chunk.reserve(std::distance(begin, end));
 
             for (auto it = begin; it != end; it++) {
                 chunk.emplace_back(it);
@@ -88,11 +87,17 @@ namespace kyut {
                 return less(*a, *b);
             });
 
+            const auto chunk_begin = std::begin(chunk);
+            const auto chunk_end = std::end(chunk);
+
+            const std::size_t count = std::distance(chunk_begin, chunk_end);
+            const std::size_t bit_width = factorial_bit_width_table[count];
+
             // Extract watermark.
             std::uint64_t watermark = 0;
             std::uint64_t base = 1;
             for (std::size_t i = 0; i < count; i++) {
-                const auto it = std::begin(chunk) + i;
+                const auto it = chunk_begin + i;
 
                 // Find the position of `begin + i`.
                 const auto found = std::find(it, std::end(chunk), begin + i);
@@ -106,8 +111,6 @@ namespace kyut {
                 // Remove `it` found in this step.
                 std::iter_swap(it, found);
             }
-
-            const auto bit_width = factorial_bit_width_table[count];
 
             assert(watermark < (std::uint64_t{1} << bit_width));
             w.write(watermark, bit_width);
