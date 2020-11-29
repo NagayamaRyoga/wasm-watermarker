@@ -24,7 +24,7 @@ namespace kyut::methods::function_ordering {
             start,
             end,
             [](const auto& a, const auto& b) {
-                return a->name < b->name;
+                return a->name < b->name; // TODO: ordered by body
             });
 
         return size_bits;
@@ -44,7 +44,7 @@ namespace kyut::methods::function_ordering {
             start,
             end,
             [](const auto& a, const auto& b) {
-                return a->name < b->name;
+                return a->name < b->name; // TODO: ordered by body
             });
 
         return size_bits;
