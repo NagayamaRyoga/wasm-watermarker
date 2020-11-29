@@ -10,7 +10,7 @@ namespace kyut {
 } // namespace kyut
 
 namespace kyut::methods::export_ordering {
-    std::size_t embed(CircularBitStreamReader& r, wasm::Module& module, std::size_t chunk_size) {
+    inline std::size_t embed(CircularBitStreamReader& r, wasm::Module& module, std::size_t chunk_size) {
         const auto size_bits = embed_by_ordering(
             r,
             chunk_size,
@@ -23,7 +23,7 @@ namespace kyut::methods::export_ordering {
         return size_bits;
     }
 
-    std::size_t extract(BitStreamWriter& w, wasm::Module& module, std::size_t chunk_size) {
+    inline std::size_t extract(BitStreamWriter& w, wasm::Module& module, std::size_t chunk_size) {
         const auto size_bits = extract_by_ordering(
             w,
             chunk_size,
