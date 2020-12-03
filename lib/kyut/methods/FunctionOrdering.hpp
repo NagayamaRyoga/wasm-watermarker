@@ -2,7 +2,7 @@
 #define INCLUDE_kyut_methods_FunctionOrdering_hpp
 
 #include "../Ordering.hpp"
-#include "wasm.h"
+#include "../wasm-ext/Compare.hpp"
 
 namespace kyut {
     class CircularBitStreamReader;
@@ -24,7 +24,7 @@ namespace kyut::methods::function_ordering {
             start,
             end,
             [](const auto& a, const auto& b) {
-                return a->name < b->name; // TODO: ordered by body
+                return *a->body < *b->body;
             });
 
         return size_bits;
@@ -44,7 +44,7 @@ namespace kyut::methods::function_ordering {
             start,
             end,
             [](const auto& a, const auto& b) {
-                return a->name < b->name; // TODO: ordered by body
+                return *a->body < *b->body;
             });
 
         return size_bits;
