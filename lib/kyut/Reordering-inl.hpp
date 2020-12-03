@@ -1,7 +1,7 @@
 #ifndef INCLUDE_kyut_Ordering_inl_hpp
 #define INCLUDE_kyut_Ordering_inl_hpp
 
-#include "Ordering.hpp"
+#include "Reordering.hpp"
 
 #include <algorithm>
 #include "BitStreamWriter.hpp"
@@ -43,7 +43,7 @@ namespace kyut {
         }
 
         template <typename RandomAccessIterator, typename Less>
-        inline std::size_t embed_by_ordering(
+        inline std::size_t embed_by_reordering(
             CircularBitStreamReader& r,
             std::size_t chunk_size,
             RandomAccessIterator begin,
@@ -119,7 +119,7 @@ namespace kyut {
         }
 
         template <typename RandomAccessIterator, typename Less>
-        inline std::size_t extract_by_ordering(
+        inline std::size_t extract_by_reordering(
             BitStreamWriter& w,
             std::size_t chunk_size,
             RandomAccessIterator begin,
@@ -144,23 +144,23 @@ namespace kyut {
     } // namespace detail
 
     template <typename RandomAccessIterator, typename Less>
-    inline std::size_t embed_by_ordering(
+    inline std::size_t embed_by_reordering(
         CircularBitStreamReader& r,
         std::size_t chunk_size,
         RandomAccessIterator begin,
         RandomAccessIterator end,
         Less less) {
-        return detail::embed_by_ordering(r, chunk_size, begin, end, less);
+        return detail::embed_by_reordering(r, chunk_size, begin, end, less);
     }
 
     template <typename RandomAccessIterator, typename Less>
-    inline std::size_t extract_by_ordering(
+    inline std::size_t extract_by_reordering(
         BitStreamWriter& w,
         std::size_t chunk_size,
         RandomAccessIterator begin,
         RandomAccessIterator end,
         Less less) {
-        return detail::extract_by_ordering(w, chunk_size, begin, end, less);
+        return detail::extract_by_reordering(w, chunk_size, begin, end, less);
     }
 } // namespace kyut
 

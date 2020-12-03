@@ -1,7 +1,7 @@
 #include <fmt/printf.h>
 #include "cmdline.h"
-#include "kyut/methods/ExportOrdering.hpp"
-#include "kyut/methods/FunctionOrdering.hpp"
+#include "kyut/methods/ExportReordering.hpp"
+#include "kyut/methods/FunctionReordering.hpp"
 #include "wasm-io.h"
 
 namespace {
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     options.add("help", 'h', "Print help message");
     options.add("version", 'v', "Print version");
 
-    options.add<std::string>("method", 'm', "Embedding method (function-ordering, export-ordering)", true, "", cmdline::oneof<std::string>("function-ordering", "export-ordering"));
+    options.add<std::string>("method", 'm', "Embedding method (function-reordering, export-reordering)", true, "", cmdline::oneof<std::string>("function-reordering", "export-reordering"));
     options.add<std::size_t>("chunk-size", 'c', "Chunk size [2~20]", false, 20, cmdline::range<std::size_t>(2, 20));
     options.add<std::string>("dump", 0, "Output format (ascii, hex)", false, "ascii", cmdline::oneof<std::string>("ascii", "hex"));
 
@@ -51,10 +51,10 @@ int main(int argc, char* argv[]) {
         kyut::BitStreamWriter w{};
 
         std::size_t size_bits;
-        if (method == "function-ordering") {
-            size_bits = kyut::methods::function_ordering::extract(w, module, chunk_size);
-        } else if (method == "export-ordering") {
-            size_bits = kyut::methods::export_ordering::extract(w, module, chunk_size);
+        if (method == "function-reordering") {
+            size_bits = kyut::methods::function_reordering::extract(w, module, chunk_size);
+        } else if (method == "export-reordering") {
+            size_bits = kyut::methods::export_reordering::extract(w, module, chunk_size);
         } else {
             WASM_UNREACHABLE(("unknown method: " + method).c_str());
         }

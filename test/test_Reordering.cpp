@@ -1,4 +1,4 @@
-#include "kyut/Ordering.hpp"
+#include "kyut/Reordering.hpp"
 
 #include <gtest/gtest.h>
 
@@ -11,7 +11,7 @@ namespace {
         std::string_view expected_reordered_data) {
         kyut::CircularBitStreamReader r{watermark};
 
-        const auto size_bits = kyut::embed_by_ordering(
+        const auto size_bits = kyut::embed_by_reordering(
             r,
             chunk_size,
             std::begin(data),
@@ -23,7 +23,7 @@ namespace {
     }
 } // namespace
 
-TEST(kyut_Ordering, embed_by_ordering) {
+TEST(kyut_Reordering, embed_by_reordering) {
     using namespace std::string_view_literals;
 
     check_embed("1234", "\x00"sv, 20, 4, "1234");
@@ -47,7 +47,7 @@ namespace {
         std::string_view expected_watermark_extracted) {
         kyut::BitStreamWriter w{};
 
-        const auto size_bits = kyut::extract_by_ordering(
+        const auto size_bits = kyut::extract_by_reordering(
             w,
             chunk_size,
             std::begin(data),
@@ -60,7 +60,7 @@ namespace {
     }
 } // namespace
 
-TEST(kyut_Ordering, extract_by_ordering) {
+TEST(kyut_Reordering, extract_by_reordering) {
     using namespace std::string_view_literals;
 
     check_extract("1234", 20, 4, "\x00"sv);
@@ -80,7 +80,7 @@ namespace {
         std::string_view expected_watermark_extracted) {
         kyut::CircularBitStreamReader r{watermark_embedding};
 
-        const auto size_bits_embedded = kyut::embed_by_ordering(
+        const auto size_bits_embedded = kyut::embed_by_reordering(
             r,
             chunk_size,
             std::begin(data),
@@ -91,7 +91,7 @@ namespace {
 
         kyut::BitStreamWriter w{};
 
-        const auto size_bits_extracted = kyut::extract_by_ordering(
+        const auto size_bits_extracted = kyut::extract_by_reordering(
             w,
             chunk_size,
             std::begin(data),
@@ -103,7 +103,7 @@ namespace {
     }
 } // namespace
 
-TEST(kyut_Ordering, embed_then_extract) {
+TEST(kyut_Reordering, embed_then_extract) {
     using namespace std::string_view_literals;
 
     check_embed_then_extract("1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv", "Test"sv, 15, 40 * 3 + 32, "TestTestTestTestTes"sv);

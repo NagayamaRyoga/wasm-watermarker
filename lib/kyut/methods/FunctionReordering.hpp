@@ -1,7 +1,7 @@
-#ifndef INCLUDE_kyut_methods_FunctionOrdering_hpp
-#define INCLUDE_kyut_methods_FunctionOrdering_hpp
+#ifndef INCLUDE_kyut_methods_FunctionReordering_hpp
+#define INCLUDE_kyut_methods_FunctionReordering_hpp
 
-#include "../Ordering.hpp"
+#include "../Reordering.hpp"
 #include "../wasm-ext/Compare.hpp"
 
 namespace kyut {
@@ -9,7 +9,7 @@ namespace kyut {
     class BitStreamWriter;
 } // namespace kyut
 
-namespace kyut::methods::function_ordering {
+namespace kyut::methods::function_reordering {
     inline std::size_t embed(CircularBitStreamReader& r, wasm::Module& module, std::size_t chunk_size) {
         const auto begin = std::begin(module.functions);
         const auto end = std::end(module.functions);
@@ -18,7 +18,7 @@ namespace kyut::methods::function_ordering {
             return f->body == nullptr;
         });
 
-        const auto size_bits = embed_by_ordering(
+        const auto size_bits = embed_by_reordering(
             r,
             chunk_size,
             start,
@@ -38,7 +38,7 @@ namespace kyut::methods::function_ordering {
             return f->body == nullptr;
         });
 
-        const auto size_bits = extract_by_ordering(
+        const auto size_bits = extract_by_reordering(
             w,
             chunk_size,
             start,
@@ -49,6 +49,6 @@ namespace kyut::methods::function_ordering {
 
         return size_bits;
     }
-} // namespace kyut::methods::function_ordering
+} // namespace kyut::methods::function_reordering
 
-#endif // INCLUDE_kyut_methods_FunctionOrdering_hpp
+#endif // INCLUDE_kyut_methods_FunctionReordering_hpp
