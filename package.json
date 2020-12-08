@@ -12,6 +12,7 @@
   "dependencies": {
     "ammo.js": "github:kripken/ammo.js",
     "jq-web": "^0.5.1",
-    "source-map": "^0.7.3"
+    "source-map": "^0.7.3",
+    "wasm-flate": "^1.0.2-browser"
   }
 }
