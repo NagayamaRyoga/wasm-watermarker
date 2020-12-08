@@ -11,6 +11,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "ammo.js": "github:kripken/ammo.js",
-    "jq-web": "^0.5.1"
+    "jq-web": "^0.5.1",
+    "source-map": "^0.7.3"
   }
 }
