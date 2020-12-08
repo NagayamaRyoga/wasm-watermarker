@@ -8,5 +8,8 @@
     "url": "git+https://github.com/NagayamaRyoga/wasm-watermarker.git"
   },
   "author": "NagayamaRyoga <nagayama15@sec.is.kit.ac.jp>",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "dependencies": {
+    "jq-web": "^0.5.1"
+  }
 }
