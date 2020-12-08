@@ -1,0 +1,12 @@
+{
+  "name": "wasm-watermarker",
+  "version": "0.1.0",
+  "description": "WebAssembly Watermarker",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NagayamaRyoga/wasm-watermarker.git"
+  },
+  "author": "NagayamaRyoga <nagayama15@sec.is.kit.ac.jp>",
+  "license": "GPL-3.0"
+}
