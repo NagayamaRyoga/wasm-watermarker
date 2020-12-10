@@ -25,4 +25,8 @@ set_target_properties(binaryen::binaryen PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${source_dir}/src"
 )
 
+target_link_libraries(binaryen::binaryen INTERFACE
+    Threads::Threads
+)
+
 add_dependencies(binaryen::binaryen binaryen)
