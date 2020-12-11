@@ -6,19 +6,19 @@ SNPI="./build/bin/snpi"
 PISN="./build/bin/pisn"
 
 WASM_BINARIES = {
-    :ammo => "./node_modules/ammo.js/builds/ammo.wasm.wasm",
-    :jq => "./node_modules/jq-web/jq.wasm.wasm",
-    :source_map => "./node_modules/source-map/lib/mappings.wasm",
-    :wasm_flate => "./node_modules/wasm-flate/wasm_flate_bg.wasm",
-    :vim => "./node_modules/vim-wasm/vim.wasm",
-    :vim_small => "./node_modules/vim-wasm/small/vim.wasm",
+  :source_map => "./node_modules/source-map/lib/mappings.wasm",
+  :wasm_flate => "./node_modules/wasm-flate/wasm_flate_bg.wasm",
+  :ammo => "./node_modules/ammo.js/builds/ammo.wasm.wasm",
+  :jq => "./node_modules/jq-web/jq.wasm.wasm",
+  :vim_small => "./node_modules/vim-wasm/small/vim.wasm",
+  :vim => "./node_modules/vim-wasm/vim.wasm",
 }
 
 OUTPUT_DIRS = {
-  :ammo => "./out/ammo.js",
-  :jq => "./out/jq-web",
   :source_map => "./out/source-map",
   :wasm_flate => "./out/wasm-flate",
+  :ammo => "./out/ammo.js",
+  :jq => "./out/jq-web",
   :vim => "./out/vim-wasm",
   :vim_small => "./out/vim-wasm/small",
 }
