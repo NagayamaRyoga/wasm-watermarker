@@ -29,6 +29,8 @@ METHODS = [
   {:name => "operand-swap", :abbr => "op"},
 ]
 
+watermark = "N7AStlK2gioIqeRi"
+
 def copy(file, out)
     FileUtils.copy(file, out, {:verbose => true})
 end
@@ -48,7 +50,6 @@ end
 
 METHODS.each do |method|
   WASM_BINARIES.each do |id, file|
-    watermark = "TEST"
     dir = Pathname(OUTPUT_DIRS[id])
     out = dir + Pathname(file).basename.sub(".wasm", "-#{method[:abbr]}-#{watermark}.wasm")
 
