@@ -15,15 +15,14 @@ namespace kyut {
         std::vector<typename std::iterator_traits<Iterator>::value_type> a, b;
 
         auto it = begin;
-        a.emplace_back(std::move(*it++));
+        a.emplace_back(std::move(*it));
 
-        while (it != end) {
+        while (++it != end) {
             if (pred(a.back(), *it)) {
                 b.emplace_back(std::move(*it));
             } else {
                 a.emplace_back(std::move(*it));
             }
-            ++it;
         }
 
         it = begin;

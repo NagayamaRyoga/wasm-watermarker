@@ -105,7 +105,10 @@ namespace kyut {
                 const auto it = chunk_begin + i;
 
                 // Find the position of `begin + i`.
-                const auto found = std::find(it, std::end(chunk), begin + i);
+                const auto found = std::find_if(it, std::end(chunk), [&](const auto& a) {
+                    return !less(*a, *(begin + i)) && !less(*(begin + i), *a);
+                });
+
                 assert(found != std::end(chunk));
 
                 const std::size_t pos = std::distance(it, found);

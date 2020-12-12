@@ -22,6 +22,10 @@ namespace wasm {
             return *p;
         };
 
+        if (&a == &b) {
+            return false;
+        }
+
         if (a._id != b._id) {
             return a._id < b._id;
         }
@@ -347,6 +351,10 @@ namespace wasm {
     }
 
     inline bool operator<(const ExpressionList& a, const ExpressionList& b) {
+        if (&a == &b) {
+            return false;
+        }
+
         if (a.size() != b.size()) {
             return a.size() < b.size();
         }
@@ -362,6 +370,10 @@ namespace wasm {
     }
 
     inline bool operator<(const Function& a, const Function& b) {
+        if (&a == &b) {
+            return false;
+        }
+
         // wasm::Function::getNumVars() does not modify states
         return std::forward_as_tuple(a.sig, const_cast<Function&>(a).getNumVars(), *a.body) <
                std::forward_as_tuple(b.sig, const_cast<Function&>(b).getNumVars(), *b.body);
