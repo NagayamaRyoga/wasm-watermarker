@@ -24,7 +24,7 @@ namespace kyut::methods::function_reordering {
             start,
             end,
             [](const auto& a, const auto& b) {
-                return *a->body < *b->body;
+                return *a < *b;
             });
 
         return size_bits;
@@ -44,7 +44,7 @@ namespace kyut::methods::function_reordering {
             start,
             end,
             [](const auto& a, const auto& b) {
-                return *a->body < *b->body;
+                return *a < *b;
             });
 
         return size_bits;

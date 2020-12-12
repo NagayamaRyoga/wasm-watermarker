@@ -347,6 +347,10 @@ namespace wasm {
     }
 
     inline bool operator<(const ExpressionList& a, const ExpressionList& b) {
+        if (a.size() != b.size()) {
+            return a.size() < b.size();
+        }
+
         return std::lexicographical_compare(
             std::begin(a),
             std::end(a),
@@ -355,6 +359,12 @@ namespace wasm {
             [](const Expression* a, const Expression* b) {
                 return *a < *b;
             });
+    }
+
+    inline bool operator<(const Function& a, const Function& b) {
+        // wasm::Function::getNumVars() does not modify states
+        return std::forward_as_tuple(a.sig, const_cast<Function&>(a).getNumVars(), *a.body) <
+               std::forward_as_tuple(b.sig, const_cast<Function&>(b).getNumVars(), *b.body);
     }
 } // namespace wasm
 
