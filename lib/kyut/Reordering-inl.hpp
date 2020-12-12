@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "BitStreamWriter.hpp"
 #include "CircularBitStreamReader.hpp"
+#include "SafeUnique.hpp"
 
 namespace kyut {
     namespace detail {

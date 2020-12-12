@@ -4,6 +4,7 @@ add_executable(test_kyut
     test_BitStreamWriter.cpp
     test_CircularBitStreamReader.cpp
     test_Reordering.cpp
+    test_SafeUnique.cpp
 )
 
 target_link_libraries(test_kyut
