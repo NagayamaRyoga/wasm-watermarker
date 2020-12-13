@@ -128,7 +128,7 @@ namespace kyut {
                 std::iter_swap(it, found);
             }
 
-            assert(watermark < (std::uint64_t{1} << bit_width));
+            // assert(watermark < (std::uint64_t{1} << bit_width));
             w.write(watermark, bit_width);
 
             return bit_width;
