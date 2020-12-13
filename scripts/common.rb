@@ -11,7 +11,7 @@ WASM_BINARIES = {
   :wasm_flate => "./node_modules/wasm-flate/wasm_flate_bg.wasm",
   :ammo => "./node_modules/ammo.js/builds/ammo.wasm.wasm",
   :jq => "./node_modules/jq-web/jq.wasm.wasm",
-  :vim_small => "./node_modules/vim-wasm/small/vim.wasm",
+  # :vim_small => "./node_modules/vim-wasm/small/vim.wasm",
   :vim => "./node_modules/vim-wasm/vim.wasm",
 }
 

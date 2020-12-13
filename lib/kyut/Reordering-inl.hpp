@@ -117,7 +117,7 @@ namespace kyut {
                     return !less(*a, *(begin + i)) && !less(*(begin + i), *a);
                 });
 
-                assert(found != std::end(chunk));
+                assert(found != std::end(chunk)); // FIXME: sometimes crashing here (maybe count < 2)
 
                 const std::size_t pos = std::distance(it, found);
 
