@@ -2,8 +2,10 @@
 require 'fileutils'
 require 'pathname'
 
-SNPI="./build/bin/snpi"
-PISN="./build/bin/pisn"
+SNPI = "./build/bin/snpi"
+PISN = "./build/bin/pisn"
+
+WASM_OPT = "./build/binaryen/build/bin/wasm-opt"
 
 WASM_BINARIES = {
   :source_map => "./node_modules/source-map/lib/mappings.wasm",
@@ -31,6 +33,42 @@ METHODS = [
 
 watermark = "N7AStlK2gioIqeRi"
 
+OPT_PASSES = [
+  "coalesce-locals",
+  "code-folding",
+  "code-pushing",
+  "dae-optimizing",
+  "dce",
+  "directize",
+  "duplicate-function-elimination",
+  "duplicate-import-elimination",
+  "flatten",
+  "generate-stack-ir",
+  "inlining-optimizing",
+  # "local-cse", # must be --flatten before
+  "memory-packing",
+  "merge-blocks",
+  "merge-locals",
+  # "optimize-added-constants-propagate", # Assertion failed
+  # "optimize-added-constants", # Assertion failed
+  "optimize-instructions",
+  "optimize-stack-ir",
+  "pick-load-signs",
+  "precompute-propagate",
+  "precompute",
+  "remove-unused-brs",
+  "remove-unused-module-elements",
+  "remove-unused-names",
+  "reorder-locals",
+  "rse",
+  "simplify-globals-optimizing",
+  "simplify-globals",
+  "simplify-locals-nostructure",
+  "simplify-locals",
+  "ssa-nomerge",
+  "vacuum",
+]
+
 def copy(file, out)
     FileUtils.copy(file, out, {:verbose => true})
 end
@@ -38,7 +76,13 @@ end
 def embed(file, out, method, watermark, chunk_size = 20)
   output = IO.popen([SNPI, "-o", out.to_s, "-m", method, "-w", watermark, "-c", chunk_size.to_s, file.to_s]).read
 
-  puts "#{file}, #{out}, #{method}, #{watermark}, #{output}"
+  puts "embed #{file}, #{out}, #{method}, #{watermark}, #{output}"
+end
+
+def optimize(file, out, pass)
+  output = IO.popen([WASM_OPT, "-o", out.to_s, "--#{pass}", file.to_s]).read
+
+  puts "optimize #{file}, #{out}, #{pass}, #{output}"
 end
 
 WASM_BINARIES.each do |id, file|
@@ -54,5 +98,7 @@ METHODS.each do |method|
     out = dir + Pathname(file).basename.sub(".wasm", "-#{method[:abbr]}-#{watermark}.wasm")
 
     embed(file, out, method[:name], watermark)
+
+    OPT_PASSES.each {|pass| optimize(out, out.sub(".wasm", "-#{pass}.wasm"), pass)}
   end
 end
