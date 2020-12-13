@@ -26,7 +26,10 @@ namespace kyut {
             // Sort the chunk.
             std::sort(begin, end, less);
 
-            // TODO: Assume unique
+            // Assume unique
+            end = safe_unique(begin, end, [&](const auto& a, const auto& b) {
+                return !less(a, b) && !less(a, b);
+            });
 
             // Embed watermark.
             const std::size_t count = std::distance(begin, end);
@@ -90,7 +93,12 @@ namespace kyut {
                 return less(*a, *b);
             });
 
-            // TODO: Assume unique
+            // Assume unique
+            chunk.erase(
+                safe_unique(std::begin(chunk), std::end(chunk), [&](const auto& a, const auto& b) {
+                    return !less(*a, *b) && !less(*a, *b);
+                }),
+                std::end(chunk));
 
             const auto chunk_begin = std::begin(chunk);
             const auto chunk_end = std::end(chunk);

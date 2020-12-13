@@ -38,8 +38,8 @@ TEST(kyut_Reordering, embed_by_reordering) {
     check_embed("2314", "\x50"sv, 20, 4, "2314");
     check_embed("2314", "\x00"sv, 20, 4, "1234");
 
-    // check_embed("1223", "\x00"sv, 20, 2, "1232");
-    // check_embed("1223", "\x40"sv, 20, 2, "2132");
+    check_embed("1223", "\x00"sv, 20, 2, "1232");
+    check_embed("1223", "\x40"sv, 20, 2, "2132");
 }
 
 namespace {
@@ -73,8 +73,8 @@ TEST(kyut_Reordering, extract_by_reordering) {
     check_extract("1324", 20, 4, "\x40"sv);
     check_extract("2314", 20, 4, "\x50"sv);
 
-    // check_extract("1232", 20, 2, "\x00"sv);
-    // check_extract("2132", 20, 2, "\x40"sv);
+    check_extract("1232", 20, 2, "\x00"sv);
+    check_extract("2132", 20, 2, "\x40"sv);
 }
 
 namespace {
