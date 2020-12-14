@@ -10,7 +10,7 @@ METHODS.each do |method|
 
     OPT_PASSES.each do |pass|
       b = a.to_s.end_with?(".wasm.txt") ? a.sub(".wasm.txt", "-#{pass}.wasm.txt") : a.sub(".txt", "-#{pass}.txt")
-      puts "#{a.basename} - #{b.basename}: #{method[:name]}, #{pass}, #{FileUtils.cmp(a, b)}"
+      puts "#{a.basename} - #{b.basename}: #{method[:name]}, #{pass}, #{FileUtils.cmp(a, b) ? "○" : "☓"}"
     end
   end
 end

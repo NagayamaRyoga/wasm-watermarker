@@ -51,19 +51,26 @@ OPT_PASSES = [
   "optimize-instructions",
   "optimize-stack-ir",
   "pick-load-signs",
-  "precompute-propagate",
   "precompute",
+  "precompute-propagate",
   "remove-unused-brs",
   "remove-unused-module-elements",
   "remove-unused-names",
   "reorder-locals",
   "rse",
-  "simplify-globals-optimizing",
   "simplify-globals",
-  "simplify-locals-nostructure",
+  "simplify-globals-optimizing",
   "simplify-locals",
+  "simplify-locals-nostructure",
   "ssa-nomerge",
   "vacuum",
+
+  "O1",
+  "O2",
+  "O3",
+  "O4",
+  "Os",
+  "Oz",
 ]
 
 WATERMARK = "N7AStlK2gioIqeRi"
@@ -79,7 +86,7 @@ def embed(file, out, method, watermark, chunk_size = 20)
 end
 
 def optimize(file, out, pass)
-  output = IO.popen([WASM_OPT, "-o", out.to_s, "--#{pass}", file.to_s]).read
+  output = IO.popen([WASM_OPT, "-o", out.to_s, pass.start_with?("O") ? "-#{pass}" : "--#{pass}", file.to_s]).read
 
   puts "optimize #{file}, #{out}, #{pass}, #{output}"
 end

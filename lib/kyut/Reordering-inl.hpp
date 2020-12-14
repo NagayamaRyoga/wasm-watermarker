@@ -104,6 +104,10 @@ namespace kyut {
             const auto chunk_end = std::end(chunk);
 
             const std::size_t count = std::distance(chunk_begin, chunk_end);
+            if (count < 2) {
+                return 0;
+            }
+
             const std::size_t bit_width = factorial_bit_width_table[count];
 
             // Extract watermark.
@@ -117,7 +121,11 @@ namespace kyut {
                     return !less(*a, *(begin + i)) && !less(*(begin + i), *a);
                 });
 
-                assert(found != std::end(chunk)); // FIXME: sometimes crashing here (maybe count < 2)
+                // assert(found != std::end(chunk)); // FIXME: sometimes crashing here
+                if (found == std::end(chunk)) {
+                    base *= count - i;
+                    continue;
+                }
 
                 const std::size_t pos = std::distance(it, found);
 
