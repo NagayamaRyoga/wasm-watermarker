@@ -80,7 +80,7 @@ def copy(file, out)
 end
 
 def embed(file, out, method, watermark, chunk_size = 20)
-  output = IO.popen([SNPI, "-o", out.to_s, "-m", method, "-w", watermark, "-c", chunk_size.to_s, file.to_s]).read
+  output = IO.popen([SNPI, "-o", out.to_s, "-m", method, "-w", watermark, "-c", chunk_size.to_s, "-d", file.to_s]).read
 
   puts "embed #{file}, #{out}, #{method}, #{watermark}, #{output}"
 end

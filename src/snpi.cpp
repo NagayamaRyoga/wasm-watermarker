@@ -21,6 +21,7 @@ int main(int argc, char* argv[]) {
     options.add<std::string>("method", 'm', "Embedding method (function-reorder, export-reorder, operand-swap)", true, "", cmdline::oneof<std::string>("function-reorder", "export-reorder", "operand-swap"));
     options.add<std::string>("watermark", 'w', "Watermark to embed", true);
     options.add<std::size_t>("chunk-size", 'c', "Chunk size [2~20]", false, 20, cmdline::range<std::size_t>(2, 20));
+    options.add("debug", 'd', "Preserve debug info");
 
     options.set_program_name(program_name);
     options.footer("filename");
@@ -61,6 +62,7 @@ int main(int argc, char* argv[]) {
     const auto method = options.get<std::string>("method");
     const auto watermark = options.get<std::string>("watermark");
     const auto chunk_size = options.get<std::size_t>("chunk-size");
+    const auto preserve_debug = options.exist("debug");
 
     try {
         wasm::Module module{};
@@ -79,8 +81,9 @@ int main(int argc, char* argv[]) {
             WASM_UNREACHABLE(("unknown method: " + method).c_str());
         }
 
-        Colors::setEnabled(false);
-        wasm::ModuleWriter{}.writeBinary(module, output);
+        wasm::ModuleWriter w{};
+        w.setDebugInfo(preserve_debug);
+        w.writeBinary(module, output);
 
         fmt::print("{} bits\n", size_bits);
     } catch (const std::exception& e) {
