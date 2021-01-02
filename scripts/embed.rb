@@ -17,6 +17,6 @@ METHODS.each do |method|
 
     embed(file, out, method[:name], watermark)
 
-    OPT_PASSES.each {|pass| optimize(out, out.sub(".wasm", "-#{pass}.wasm"), pass)}
+    OPT_PASSES.each {|pass| optimize(out, out.sub(".wasm", "-#{pass}.wasm"), pass)} if method[:name] != "null"
   end
 end

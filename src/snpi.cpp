@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     options.add("version", 'v', "Print version");
 
     options.add<std::string>("output", 'o', "Output filename", true);
-    options.add<std::string>("method", 'm', "Embedding method (function-reorder, export-reorder, operand-swap)", true, "", cmdline::oneof<std::string>("function-reorder", "export-reorder", "operand-swap"));
+    options.add<std::string>("method", 'm', "Embedding method (function-reorder, export-reorder, operand-swap, null)", true, "", cmdline::oneof<std::string>("function-reorder", "export-reorder", "operand-swap", "null"));
     options.add<std::string>("watermark", 'w', "Watermark to embed", true);
     options.add<std::size_t>("chunk-size", 'c', "Chunk size [2~20]", false, 20, cmdline::range<std::size_t>(2, 20));
     options.add("debug", 'd', "Preserve debug info");
@@ -77,6 +77,8 @@ int main(int argc, char* argv[]) {
             size_bits = kyut::methods::export_reordering::embed(r, module, chunk_size);
         } else if (method == "operand-swap") {
             size_bits = kyut::methods::operand_swapping::embed(r, module);
+        } else if (method == "null") {
+            size_bits = 0; /* Don't do anything */
         } else {
             WASM_UNREACHABLE(("unknown method: " + method).c_str());
         }

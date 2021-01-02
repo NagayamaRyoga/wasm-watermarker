@@ -28,6 +28,7 @@ METHODS = [
   {:name => "function-reorder", :abbr => "fn"},
   {:name => "export-reorder", :abbr => "ex"},
   {:name => "operand-swap", :abbr => "op"},
+  {:name => "null", :abbr => "null"},
 ]
 
 OPT_PASSES = [
