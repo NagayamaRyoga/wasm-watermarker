@@ -48,17 +48,27 @@ int main(int argc, char* argv[]) {
         wasm::Module module{};
         wasm::ModuleReader{}.read(input, module);
 
+        std::size_t num_imports = 0;
+        for (const auto& f : module.functions) {
+            if (f->body == nullptr) {
+                num_imports += 1;
+            }
+        }
+
         if (!quiet) {
             fmt::print(
                 "functions: {}\n"
-                "exports: {}\n",
+                "exports: {}\n"
+                "imports: {}\n",
                 module.functions.size(),
-                module.exports.size());
+                module.exports.size(),
+                num_imports);
         } else {
             fmt::print(
-                "{}\t{}\n",
+                "{}\t{}\t{}\n",
                 module.functions.size(),
-                module.exports.size());
+                module.exports.size(),
+                num_imports);
         }
     } catch (const std::exception& e) {
         fmt::print(std::cerr, "error: {}\n", e.what());
