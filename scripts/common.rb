@@ -77,7 +77,7 @@ OPT_PASSES = [
 WATERMARK = "N7AStlK2gioIqeRi"
 
 def copy(file, out)
-    FileUtils.copy(file, out, {:verbose => true})
+    FileUtils.copy(file, out)
 end
 
 def embed(file, out, method, watermark, chunk_size = 20)
