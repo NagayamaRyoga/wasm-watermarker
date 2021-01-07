@@ -49,6 +49,9 @@ _deps
 node_modules/
 *.log
 
+### Ruby gems
+/.bundle/
+
 ### Build directories
 /build*/
 /out/
