@@ -11,5 +11,5 @@ METHODS.each do |method|
     extract(out, method[:name])
 
     OPT_PASSES.each {|pass| extract(out.sub(".wasm", "-#{pass}.wasm"), method[:name])}
-  end
+  end if method[:name] != "null"
 end
