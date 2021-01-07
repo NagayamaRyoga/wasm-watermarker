@@ -95,7 +95,7 @@ end
 def extract(file, method)
   out = Pathname(file).sub_ext(".txt")
 
-  output = IO.popen([PISN, "-m", method, file.to_s]).read
+  output = IO.popen([PISN, "-m", method, "--dump=hex", file.to_s]).read
   File.write(out, output)
 
   puts "extract #{file}, #{method}, #{out}"
