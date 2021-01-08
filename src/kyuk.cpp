@@ -1,5 +1,6 @@
 #include <fmt/printf.h>
 #include "cmdline.h"
+#include "pass.h"
 #include "wasm-io.h"
 #include "wasm-validator.h"
 
@@ -41,6 +42,239 @@ namespace {
                 break;
         }
     }
+
+    class FunctionCallVisitor : public wasm::OverriddenVisitor<FunctionCallVisitor, void> {
+        wasm::Module& module_;
+
+    public:
+        explicit FunctionCallVisitor(wasm::Module& module)
+            : module_(module) {
+        }
+
+        void visit(const wasm::ExpressionList& l) {
+            for (const auto& p : l) {
+                visit(p);
+            }
+        }
+
+        void visit(wasm::Expression* p) {
+            if (p) {
+                wasm::OverriddenVisitor<FunctionCallVisitor, void>::visit(p);
+            }
+        }
+
+        void visitBlock(wasm::Block* p) {
+            visit(p->list);
+        }
+
+        void visitIf(wasm::If* p) {
+            visit(p->condition);
+            visit(p->ifTrue);
+            visit(p->ifFalse);
+        }
+
+        void visitLoop(wasm::Loop* p) {
+            visit(p->body);
+        }
+
+        void visitBreak(wasm::Break* p) {
+            visit(p->value);
+            visit(p->condition);
+        }
+
+        void visitSwitch(wasm::Switch* p) {
+            visit(p->condition);
+            visit(p->value);
+        }
+
+        void visitCall(wasm::Call* p) {
+            visit(p->operands);
+
+            // TODO: call
+        }
+
+        void visitCallIndirect(wasm::CallIndirect* p) {
+            visit(p->target);
+            visit(p->operands);
+        }
+
+        void visitLocalGet([[maybe_unused]] wasm::LocalGet* p) {
+        }
+
+        void visitLocalSet(wasm::LocalSet* p) {
+            visit(p->value);
+        }
+
+        void visitGlobalGet([[maybe_unused]] wasm::GlobalGet* p) {
+        }
+
+        void visitGlobalSet(wasm::GlobalSet* p) {
+            visit(p->value);
+        }
+
+        void visitLoad(wasm::Load* p) {
+            visit(p->ptr);
+        }
+
+        void visitStore(wasm::Store* p) {
+            visit(p->ptr);
+            visit(p->value);
+        }
+
+        void visitConst([[maybe_unused]] wasm::Const* p) {
+        }
+
+        void visitUnary(wasm::Unary* p) {
+            visit(p->value);
+        }
+
+        void visitBinary(wasm::Binary* p) {
+            visit(p->left);
+            visit(p->right);
+        }
+
+        void visitSelect(wasm::Select* p) {
+            visit(p->ifTrue);
+            visit(p->ifFalse);
+            visit(p->condition);
+        }
+
+        void visitDrop(wasm::Drop* p) {
+            visit(p->value);
+        }
+
+        void visitReturn(wasm::Return* p) {
+            visit(p->value);
+        }
+
+        void visitMemorySize([[maybe_unused]] wasm::MemorySize* p) {
+        }
+
+        void visitMemoryGrow(wasm::MemoryGrow* p) {
+            visit(p->delta);
+        }
+
+        void visitNop([[maybe_unused]] wasm::Nop* p) {
+        }
+
+        void visitUnreachable([[maybe_unused]] wasm::Unreachable* p) {
+        }
+
+        void visitAtomicRMW(wasm::AtomicRMW* p) {
+            visit(p->ptr);
+            visit(p->value);
+        }
+
+        void visitAtomicCmpxchg(wasm::AtomicCmpxchg* p) {
+            visit(p->ptr);
+            visit(p->expected);
+            visit(p->replacement);
+        }
+
+        void visitAtomicWait(wasm::AtomicWait* p) {
+            visit(p->ptr);
+            visit(p->expected);
+            visit(p->timeout);
+        }
+
+        void visitAtomicNotify(wasm::AtomicNotify* p) {
+            visit(p->ptr);
+            visit(p->notifyCount);
+        }
+
+        void visitAtomicFence([[maybe_unused]] wasm::AtomicFence* p) {
+        }
+
+        void visitSIMDExtract(wasm::SIMDExtract* p) {
+            visit(p->vec);
+        }
+
+        void visitSIMDReplace(wasm::SIMDReplace* p) {
+            visit(p->vec);
+            visit(p->value);
+        }
+
+        void visitSIMDShuffle(wasm::SIMDShuffle* p) {
+            visit(p->left);
+            visit(p->right);
+        }
+
+        void visitSIMDTernary(wasm::SIMDTernary* p) {
+            visit(p->a);
+            visit(p->b);
+            visit(p->c);
+        }
+
+        void visitSIMDShift(wasm::SIMDShift* p) {
+            visit(p->vec);
+            visit(p->shift);
+        }
+
+        void visitSIMDLoad(wasm::SIMDLoad* p) {
+            visit(p->ptr);
+        }
+
+        void visitMemoryInit(wasm::MemoryInit* p) {
+            visit(p->dest);
+            visit(p->offset);
+            visit(p->size);
+        }
+
+        void visitDataDrop([[maybe_unused]] wasm::DataDrop* p) {
+        }
+
+        void visitMemoryCopy(wasm::MemoryCopy* p) {
+            visit(p->dest);
+            visit(p->source);
+            visit(p->size);
+        }
+
+        void visitMemoryFill(wasm::MemoryFill* p) {
+            visit(p->dest);
+            visit(p->value);
+            visit(p->size);
+        }
+
+        void visitPop([[maybe_unused]] wasm::Pop* p) {
+        }
+
+        void visitRefNull([[maybe_unused]] wasm::RefNull* p) {
+        }
+
+        void visitRefIsNull(wasm::RefIsNull* p) {
+            visit(p->value);
+        }
+
+        void visitRefFunc([[maybe_unused]] wasm::RefFunc* p) {
+        }
+
+        void visitTry(wasm::Try* p) {
+            visit(p->body);
+            visit(p->catchBody);
+        }
+
+        void visitThrow(wasm::Throw* p) {
+            visit(p->operands);
+        }
+
+        void visitRethrow([[maybe_unused]] wasm::Rethrow* p) {
+        }
+
+        void visitBrOnExn([[maybe_unused]] wasm::BrOnExn* p) {
+        }
+
+        void visitTupleMake(wasm::TupleMake* p) {
+            visit(p->operands);
+        }
+
+        void visitTupleExtract(wasm::TupleExtract* p) {
+            visit(p->tuple);
+        }
+
+        void visitFunction(wasm::Function* f) {
+            visit(f->body);
+        }
+    };
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -97,19 +331,17 @@ int main(int argc, char* argv[]) {
         wasm::ModuleReader{}.read(input, module);
 
         // Embedding
-        // TODO: Add extra arguments to import function callings
-
-        // Add extra parameters to import functions
         for (const auto& f : module.functions) {
-            if (f->body != nullptr) {
-                continue;
+            if (f->body == nullptr) {
+                // `f` is an import function
+                // Add extra parameters to `f`
+                fmt::print("f: {}, {}\n", f->name, f->sig.params.toString());
+                add_parameter(*f);
+            } else {
+                // `f` is not an import function
+                // Add extra arguments to import function callings
+                FunctionCallVisitor{module}.visitFunction(f.get());
             }
-
-            // `f` is an import function
-            fmt::print("f: {}, {}\n", f->name, f->sig.params.toString());
-            add_parameter(*f);
-
-            fmt::print("f: {}, {}\n", f->name, f->sig.params.toString());
         }
 
         // Validation
