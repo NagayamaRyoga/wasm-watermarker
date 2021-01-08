@@ -1,12 +1,9 @@
 #include <fmt/printf.h>
 #include "cmdline.h"
-#include "kyut/methods/ExportReordering.hpp"
-#include "kyut/methods/FunctionReordering.hpp"
-#include "kyut/methods/OperandSwapping.hpp"
 #include "wasm-io.h"
 
 namespace {
-    const std::string program_name = "snpi";
+    const std::string program_name = "kyuk";
     const std::string version = "0.1.0";
 } // namespace
 
@@ -17,9 +14,7 @@ int main(int argc, char* argv[]) {
     options.add("version", 'v', "Print version");
 
     options.add<std::string>("output", 'o', "Output filename", true);
-    options.add<std::string>("method", 'm', "Embedding method (function-reorder, export-reorder, operand-swap, null)", true, "", cmdline::oneof<std::string>("function-reorder", "export-reorder", "operand-swap", "null"));
     options.add<std::string>("watermark", 'w', "Watermark to embed", true);
-    options.add<std::size_t>("chunk-size", 'c', "Chunk size [2~20]", false, 20, cmdline::range<std::size_t>(2, 20));
     options.add("debug", 'd', "Preserve debug info");
 
     options.set_program_name(program_name);
@@ -58,35 +53,18 @@ int main(int argc, char* argv[]) {
 
     const auto input = options.rest()[0];
     const auto output = options.get<std::string>("output");
-    const auto method = options.get<std::string>("method");
     const auto watermark = options.get<std::string>("watermark");
-    const auto chunk_size = options.get<std::size_t>("chunk-size");
     const auto preserve_debug = options.exist("debug");
 
     try {
         wasm::Module module{};
         wasm::ModuleReader{}.read(input, module);
 
-        kyut::CircularBitStreamReader r{watermark};
-
-        std::size_t size_bits;
-        if (method == "function-reorder") {
-            size_bits = kyut::methods::function_reordering::embed(r, module, chunk_size);
-        } else if (method == "export-reorder") {
-            size_bits = kyut::methods::export_reordering::embed(r, module, chunk_size);
-        } else if (method == "operand-swap") {
-            size_bits = kyut::methods::operand_swapping::embed(r, module);
-        } else if (method == "null") {
-            size_bits = 0; /* Don't do anything */
-        } else {
-            WASM_UNREACHABLE(("unknown method: " + method).c_str());
-        }
+        // TODO: Embedding
 
         wasm::ModuleWriter w{};
         w.setDebugInfo(preserve_debug);
         w.writeBinary(module, output);
-
-        fmt::print("{} bits\n", size_bits);
     } catch (const std::exception& e) {
         fmt::print(std::cerr, "error: {}\n", e.what());
         std::exit(EXIT_FAILURE);

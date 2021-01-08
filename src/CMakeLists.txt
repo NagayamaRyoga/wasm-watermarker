@@ -16,6 +16,15 @@ target_link_libraries(pisn
     cmdline::cmdline
 )
 
+add_executable(kyuk
+    kyuk.cpp
+)
+
+target_link_libraries(kyuk
+    kyut
+    cmdline::cmdline
+)
+
 add_executable(wasm-stat
     wasm-stat.cpp
 )
