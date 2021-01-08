@@ -90,7 +90,19 @@ namespace {
         void visitCall(wasm::Call* p) {
             visit(p->operands);
 
-            // TODO: call
+            const auto f = module_.getFunctionOrNull(p->target);
+            if (f == nullptr || f->body != nullptr) {
+                return;
+            }
+
+            // `f` is an import function
+            // Pass an extra argument to `f`
+            const auto value = std::uint32_t{0xff};
+
+            auto extra = module_.allocator.alloc<wasm::Const>();
+            extra->set(wasm::Literal{value});
+
+            p->operands.push_back(extra);
         }
 
         void visitCallIndirect(wasm::CallIndirect* p) {
@@ -335,7 +347,6 @@ int main(int argc, char* argv[]) {
             if (f->body == nullptr) {
                 // `f` is an import function
                 // Add extra parameters to `f`
-                fmt::print("f: {}, {}\n", f->name, f->sig.params.toString());
                 add_parameter(*f);
             } else {
                 // `f` is not an import function
