@@ -8,6 +8,44 @@ namespace {
     const std::string program_name = "kyuk";
     const std::string version = "0.1.0";
 
+    std::uint32_t insert_data(wasm::Module& module, const std::string& watermark) {
+        // Calculate new data offset for watermark storage (and counter)
+        std::uint32_t offset = 0;
+
+        for (const auto& seg : module.memory.segments) {
+            std::uint32_t begin = seg.offset->cast<wasm::Const>()->value.geti32();
+            std::uint32_t size = seg.data.size();
+
+            offset = (std::max)(begin + size, offset);
+        }
+
+        const std::uint32_t align = 16;
+        offset = offset % align == 0 ? offset : (offset / align + 1) * align;
+
+        std::vector<char> data;
+
+        // Insert the counter area
+        // counter has type of i32
+        data.emplace_back(0x00);
+        data.emplace_back(0x00);
+        data.emplace_back(0x00);
+        data.emplace_back(0x00);
+
+        // Insert the watermark
+        for (const auto& x : watermark) {
+            data.emplace_back(x); // Watermark cannot contain null character (in the current implementation)
+        }
+        data.emplace_back('\0'); // Need null terminated (in the current implementation)
+
+        // Add the memory segment to the module
+        const auto offset_expr = module.allocator.alloc<wasm::Const>();
+        offset_expr->set(wasm::Literal{static_cast<std::int32_t>(offset)});
+
+        module.memory.segments.emplace_back(offset_expr, data);
+
+        return offset;
+    }
+
     void add_parameter(wasm::Function& f) {
         wasm::Type new_param{wasm::Type::i32};
 
@@ -341,6 +379,11 @@ int main(int argc, char* argv[]) {
     try {
         wasm::Module module{};
         wasm::ModuleReader{}.read(input, module);
+
+        // Insert a watermark data
+        const std::uint32_t offset = insert_data(module, watermark);
+
+        (void)offset;
 
         // Embedding
         for (const auto& f : module.functions) {
