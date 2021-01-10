@@ -32,6 +32,7 @@ namespace {
         data.emplace_back(0x00);
 
         // Insert the watermark
+        data.emplace_back('\x01'); // Non-zero backward sentinel (in the current implementation)
         for (const auto& x : watermark) {
             data.emplace_back(x); // Watermark cannot contain null character (in the current implementation)
         }
@@ -44,6 +45,132 @@ namespace {
         module.memory.segments.emplace_back(offset_expr, data);
 
         return offset;
+    }
+
+    wasm::Expression* build_new_operand(::MixedArena& allocator, std::uint32_t data_offset) {
+        const auto counter_offset = data_offset + 0;
+        const auto watermark_offset = data_offset + 4;
+
+        // (i32.const value)
+        const auto i32_const = [&](std::uint32_t value) {
+            const auto expr = allocator.alloc<wasm::Const>();
+            expr->set(wasm::Literal{value});
+            return expr;
+        };
+
+        // load i
+        // (i32.load offset=<i> (i32.const 0))
+        const auto load_i = [&]() {
+            const auto load = allocator.alloc<wasm::Load>();
+            load->type = wasm::Type::i32;
+            load->bytes = 4;
+            load->signed_ = false;
+            load->offset = counter_offset;
+            load->align = 4;
+            load->isAtomic = false;
+            load->ptr = i32_const(0);
+
+            return load;
+        };
+
+        // store i
+        // (i32.store offset=<i> (i32.const 0) <expr>)
+        const auto store_i = [&](wasm::Expression* expr) {
+            const auto store = allocator.alloc<wasm::Store>();
+            store->bytes = 4;
+            store->offset = counter_offset;
+            store->align = 4;
+            store->isAtomic = false;
+            store->ptr = i32_const(0);
+            store->value = expr;
+            store->valueType = wasm::Type::i32;
+
+            return store;
+        };
+
+        // (i32.add <left> <right>)
+        const auto add = [&](wasm::Expression* left, wasm::Expression* right) {
+            const auto add = allocator.alloc<wasm::Binary>();
+            add->type = wasm::Type::i32;
+            add->op = wasm::AddInt32;
+            add->left = left;
+            add->right = right;
+
+            return add;
+        };
+
+        // inc i
+        const auto inc_i = [&]() {
+            return store_i(add(load_i(), i32_const(1)));
+        };
+
+        // load w[i]
+        // (i32.load8_u offset=<w> (i32.load <i>))
+        const auto load_w = [&]() {
+            const auto load = allocator.alloc<wasm::Load>();
+            load->type = wasm::Type::i32;
+            load->bytes = 1;
+            load->signed_ = false;
+            load->offset = watermark_offset;
+            load->align = 1;
+            load->isAtomic = false;
+            load->ptr = load_i();
+
+            return load;
+        };
+
+        // inc i if w is not ended
+        const auto inc_i_if = [&]() {
+            const auto if_ = allocator.alloc<wasm::If>();
+            if_->condition = load_w();
+            if_->ifTrue = inc_i();
+            if_->ifFalse = nullptr;
+
+            return if_;
+        };
+
+        // (block $1 i32
+        //   ;; increment
+        //   ;; if w[i] { i = i+1 }
+        //   (if
+        //     ;; w[i]
+        //     (i32.load8_s offset=off+4
+        //       (i32.load offset=off
+        //         (i32.const 0)
+        //       )
+        //     )
+        //     ;; i = i+1
+        //     (i32.store offset=off
+        //       (i32.const 0)
+        //       ;; i+1
+        //       (i32.add
+        //         ;; load i
+        //         (i32.load offset=off
+        //           (i32.const 0)
+        //         )
+        //         (i32.const 1)
+        //       )
+        //     )
+        //   )
+        //   ;; load watermark
+        //   ;; w[i]
+        //   (i32.load8_s offset=off+4
+        //     ;; i
+        //     (i32.load offset=off
+        //       (i32.const 0)
+        //     )
+        //   )
+        // )
+        const auto block = allocator.alloc<wasm::Block>();
+        block->type = wasm::Type::i32;
+        block->list.push_back(inc_i_if());
+        block->list.push_back(load_w());
+
+        return block;
+    }
+
+    void modify_call(wasm::Module& module, std::uint32_t data_offset, wasm::Call& call) {
+        call.operands.push_back(build_new_operand(module.allocator, data_offset));
     }
 
     void add_parameter(wasm::Function& f) {
@@ -83,10 +210,12 @@ namespace {
 
     class FunctionCallVisitor : public wasm::OverriddenVisitor<FunctionCallVisitor, void> {
         wasm::Module& module_;
+        std::uint32_t data_offset_;
 
     public:
-        explicit FunctionCallVisitor(wasm::Module& module)
-            : module_(module) {
+        explicit FunctionCallVisitor(wasm::Module& module, std::uint32_t data_offset)
+            : module_(module)
+            , data_offset_(data_offset) {
         }
 
         void visit(const wasm::ExpressionList& l) {
@@ -135,12 +264,7 @@ namespace {
 
             // `f` is an import function
             // Pass an extra argument to `f`
-            const auto value = std::uint32_t{0xff};
-
-            auto extra = module_.allocator.alloc<wasm::Const>();
-            extra->set(wasm::Literal{value});
-
-            p->operands.push_back(extra);
+            modify_call(module_, data_offset_, *p);
         }
 
         void visitCallIndirect(wasm::CallIndirect* p) {
@@ -394,7 +518,7 @@ int main(int argc, char* argv[]) {
             } else {
                 // `f` is not an import function
                 // Add extra arguments to import function callings
-                FunctionCallVisitor{module}.visitFunction(f.get());
+                FunctionCallVisitor{module, offset}.visitFunction(f.get());
             }
         }
 
