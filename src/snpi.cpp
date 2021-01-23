@@ -20,6 +20,7 @@ int main(int argc, char* argv[]) {
     options.add<std::string>("method", 'm', "Embedding method (function-reorder, export-reorder, operand-swap, null)", true, "", cmdline::oneof<std::string>("function-reorder", "export-reorder", "operand-swap", "null"));
     options.add<std::string>("watermark", 'w', "Watermark to embed", true);
     options.add<std::size_t>("chunk-size", 'c', "Chunk size [2~20]", false, 20, cmdline::range<std::size_t>(2, 20));
+    options.add<std::size_t>("limit", 'l', "Embedding limit", false, std::size_t(-1));
     options.add("debug", 'd', "Preserve debug info");
 
     options.set_program_name(program_name);
@@ -61,6 +62,7 @@ int main(int argc, char* argv[]) {
     const auto method = options.get<std::string>("method");
     const auto watermark = options.get<std::string>("watermark");
     const auto chunk_size = options.get<std::size_t>("chunk-size");
+    const auto limit = options.get<std::size_t>("limit");
     const auto preserve_debug = options.exist("debug");
 
     try {
@@ -71,11 +73,11 @@ int main(int argc, char* argv[]) {
 
         std::size_t size_bits;
         if (method == "function-reorder") {
-            size_bits = kyut::methods::function_reordering::embed(r, module, chunk_size);
+            size_bits = kyut::methods::function_reordering::embed(r, module, limit, chunk_size);
         } else if (method == "export-reorder") {
-            size_bits = kyut::methods::export_reordering::embed(r, module, chunk_size);
+            size_bits = kyut::methods::export_reordering::embed(r, module, limit, chunk_size);
         } else if (method == "operand-swap") {
-            size_bits = kyut::methods::operand_swapping::embed(r, module);
+            size_bits = kyut::methods::operand_swapping::embed(r, module, limit);
         } else if (method == "null") {
             size_bits = 0; /* Don't do anything */
         } else {

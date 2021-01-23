@@ -335,7 +335,7 @@ namespace kyut::methods::operand_swapping {
         };
     } // namespace
 
-    std::size_t embed(CircularBitStreamReader& r, wasm::Module& module) {
+    std::size_t embed(CircularBitStreamReader& r, wasm::Module& module, std::size_t limit) {
         std::vector<wasm::Function*> functions{};
         functions.reserve(module.functions.size());
 
@@ -373,6 +373,10 @@ namespace kyut::methods::operand_swapping {
 
         for (const auto& f : functions) {
             visitor.visitFunction(f);
+
+            if (size_bits >= limit) {
+                break;
+            }
         }
 
         return size_bits;

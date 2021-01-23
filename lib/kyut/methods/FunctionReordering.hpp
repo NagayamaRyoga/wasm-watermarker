@@ -10,7 +10,7 @@ namespace kyut {
 } // namespace kyut
 
 namespace kyut::methods::function_reordering {
-    inline std::size_t embed(CircularBitStreamReader& r, wasm::Module& module, std::size_t chunk_size) {
+    inline std::size_t embed(CircularBitStreamReader& r, wasm::Module& module, std::size_t limit, std::size_t chunk_size) {
         const auto begin = std::begin(module.functions);
         const auto end = std::end(module.functions);
 
@@ -20,6 +20,7 @@ namespace kyut::methods::function_reordering {
 
         const auto size_bits = embed_by_reordering(
             r,
+            limit,
             chunk_size,
             start,
             end,

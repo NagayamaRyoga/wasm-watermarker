@@ -13,6 +13,7 @@ namespace {
 
         const auto size_bits = kyut::embed_by_reordering(
             r,
+            std::size_t(-1),
             chunk_size,
             std::begin(data),
             std::end(data),
@@ -88,6 +89,7 @@ namespace {
 
         const auto size_bits_embedded = kyut::embed_by_reordering(
             r,
+            std::size_t(-1),
             chunk_size,
             std::begin(data),
             std::end(data),

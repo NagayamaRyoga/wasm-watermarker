@@ -13,7 +13,7 @@ namespace kyut {
 } // namespace kyut
 
 namespace kyut::methods::operand_swapping {
-    std::size_t embed(CircularBitStreamReader& r, wasm::Module& module);
+    std::size_t embed(CircularBitStreamReader& r, wasm::Module& module, std::size_t limit);
 
     std::size_t extract(BitStreamWriter& w, wasm::Module& module);
 } // namespace kyut::methods::operand_swapping

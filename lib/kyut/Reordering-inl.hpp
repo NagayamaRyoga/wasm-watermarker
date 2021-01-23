@@ -51,6 +51,7 @@ namespace kyut {
         template <typename RandomAccessIterator, typename Less>
         inline std::size_t embed_by_reordering(
             CircularBitStreamReader& r,
+            std::size_t limit,
             std::size_t chunk_size,
             RandomAccessIterator begin,
             RandomAccessIterator end,
@@ -67,6 +68,10 @@ namespace kyut {
                 const auto chunk_end = chunk_begin + n;
 
                 size_bits += embed_in_chunk(r, chunk_begin, chunk_end, less);
+
+                if (size_bits >= limit) {
+                    break;
+                }
             }
 
             return size_bits;
@@ -170,11 +175,12 @@ namespace kyut {
     template <typename RandomAccessIterator, typename Less>
     inline std::size_t embed_by_reordering(
         CircularBitStreamReader& r,
+        std::size_t limit,
         std::size_t chunk_size,
         RandomAccessIterator begin,
         RandomAccessIterator end,
         Less less) {
-        return detail::embed_by_reordering(r, chunk_size, begin, end, less);
+        return detail::embed_by_reordering(r, limit, chunk_size, begin, end, less);
     }
 
     template <typename RandomAccessIterator, typename Less>
