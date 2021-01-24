@@ -10,22 +10,22 @@ method4() {
     local out="./out/size-bench/dyn/$proj/$size_bits/$(basename "$wasm")"
     mkdir -p "$(dirname "$out")"
 
-    local watermark="$(head -c "$size" /dev/random | base64 | head -c "$size")"
+    local watermark="$(head -c "$size" /dev/urandom | base64 | head -c "$size")"
 
     # warm up
+    echo -n "$proj\t$size_bits\t"
     kyuk -w "$watermark" -o "$out" "$wasm"
     kyuk -w "$watermark" -o "$out" "$wasm"
     kyuk -w "$watermark" -o "$out" "$wasm"
 
-    local times=100
     local start="$EPOCHREALTIME"
-    for i in {1..$times}; do
+    for i in {1..100}; do
         kyuk -w "$watermark" -o "$out" "$wasm"
     done
     local end="$EPOCHREALTIME"
-    local duration_ms="$((($end - $start) * 1000 / $times))"
+    local duration_ms="$((($end - $start) * 1000 / 100))"
 
-    echo "$proj\t$size_bits\t$duration_ms"
+    echo "$duration_ms"
 }
 
 method4 "jq-web" "./node_modules/jq-web/jq.wasm.wasm" 10
