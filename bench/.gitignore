@@ -1,0 +1,9 @@
+!Makefile
+
+wasm-flate/
+function-reorder/
+export-reorder/
+operand-swap/
+dyn/
+
+/bench-zlib.txt

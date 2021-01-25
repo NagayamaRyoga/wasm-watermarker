@@ -15,5 +15,9 @@
     "source-map": "^0.7.3",
     "vim-wasm": "0.0.13",
     "wasm-flate": "^1.0.2-browser"
+  },
+  "devDependencies": {
+    "assert": "^2.0.0",
+    "crypto": "^1.0.1"
   }
 }
