@@ -1,6 +1,7 @@
 !Makefile
 
 wasm-flate/
+jq-web/
 function-reorder/
 export-reorder/
 operand-swap/
