@@ -7,4 +7,4 @@ export-reorder/
 operand-swap/
 dyn/
 
-/bench-zlib.txt
+/bench-*.txt

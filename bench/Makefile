@@ -41,7 +41,7 @@ bench-zlib: \
 zlib/raw/wasm-flate: ../node_modules/wasm-flate
 	cp -r $< $@
 
-# $(eval $(call embed,watermark,method))
+# $(eval $(call embed_zlib,watermark,method))
 define embed_zlib
 .PHONY: zlib/$2/$1
 zlib/$2/$1: zlib/$2/$1/bench.js zlib/$2/$1/wasm-flate/wasm_flate.js zlib/$2/$1/wasm-flate/wasm_flate_bg.wasm
@@ -77,17 +77,20 @@ jq: \
 	jq/function-reorder/ANebjkXMZJwaaRMM \
 	jq/export-reorder/ANebjkXMZJwaaRMM \
 	jq/operand-swap/ANebjkXMZJwaaRMM \
+	jq/dyn/ANebjkXMZJwaaRMM \
 	jq/function-reorder/Qg5lb3WN8a7eRFRb \
 	jq/export-reorder/Qg5lb3WN8a7eRFRb \
 	jq/operand-swap/Qg5lb3WN8a7eRFRb \
+	jq/dyn/Qg5lb3WN8a7eRFRb \
 	jq/function-reorder/oVs8OISLiQH0RXlq \
 	jq/export-reorder/oVs8OISLiQH0RXlq \
-	jq/operand-swap/oVs8OISLiQH0RXlq
+	jq/operand-swap/oVs8OISLiQH0RXlq \
+	jq/dyn/oVs8OISLiQH0RXlq
 
 jq/raw/jq-web: ../node_modules/jq-web
 	cp -r $< $@
 
-# $(eval $(call embed,watermark,method))
+# $(eval $(call embed_jq,watermark,method))
 define embed_jq
 .PHONY: jq/$2/$1
 jq/$2/$1: jq/$2/$1/bench.js jq/$2/$1/large-file.json jq/$2/$1/jq-web/jq.wasm.min.js jq/$2/$1/jq-web/jq.wasm.wasm
@@ -109,6 +112,28 @@ jq/$2/$1/jq-web/jq.wasm.wasm: jq/raw/jq-web
 	snpi -m $2 -w $1 -o $$@ $$</jq.wasm.wasm
 endef
 
+# $(eval $(call embed_jq_m4,watermark))
+define embed_jq_m4
+.PHONY: jq/dyn/$1
+jq/dyn/$1: jq/dyn/$1/bench.js jq/dyn/$1/large-file.json jq/dyn/$1/jq-web/jq.wasm.min.js jq/dyn/$1/jq-web/jq.wasm.wasm
+
+jq/dyn/$1/bench.js: jq/raw/bench.js
+	mkdir -p $${@D}
+	cp $$< $$@
+
+jq/dyn/$1/large-file.json: jq/raw/large-file.json
+	mkdir -p $${@D}
+	cp $$< $$@
+
+jq/dyn/$1/jq-web/jq.wasm.min.js: jq/raw/jq-web
+	mkdir -p $${@D}
+	cp $$</jq.wasm.min.js $$@
+
+jq/dyn/$1/jq-web/jq.wasm.wasm: jq/raw/jq-web
+	mkdir -p $${@D}
+	kyuk -w $1 -o $$@ $$</jq.wasm.wasm
+endef
+
 $(eval $(call embed_jq,ANebjkXMZJwaaRMM,function-reorder))
 $(eval $(call embed_jq,ANebjkXMZJwaaRMM,export-reorder))
 $(eval $(call embed_jq,ANebjkXMZJwaaRMM,operand-swap))
@@ -120,3 +145,37 @@ $(eval $(call embed_jq,Qg5lb3WN8a7eRFRb,operand-swap))
 $(eval $(call embed_jq,oVs8OISLiQH0RXlq,function-reorder))
 $(eval $(call embed_jq,oVs8OISLiQH0RXlq,export-reorder))
 $(eval $(call embed_jq,oVs8OISLiQH0RXlq,operand-swap))
+
+$(eval $(call embed_jq_m4,ANebjkXMZJwaaRMM))
+$(eval $(call embed_jq_m4,Qg5lb3WN8a7eRFRb))
+$(eval $(call embed_jq_m4,oVs8OISLiQH0RXlq))
+
+.PHONY: bench-jq
+bench-jq: \
+	jq/raw/jq-web \
+	jq/function-reorder/ANebjkXMZJwaaRMM \
+	jq/export-reorder/ANebjkXMZJwaaRMM \
+	jq/operand-swap/ANebjkXMZJwaaRMM \
+	jq/dyn/ANebjkXMZJwaaRMM \
+	jq/function-reorder/Qg5lb3WN8a7eRFRb \
+	jq/export-reorder/Qg5lb3WN8a7eRFRb \
+	jq/operand-swap/Qg5lb3WN8a7eRFRb \
+	jq/dyn/Qg5lb3WN8a7eRFRb \
+	jq/function-reorder/oVs8OISLiQH0RXlq \
+	jq/export-reorder/oVs8OISLiQH0RXlq \
+	jq/operand-swap/oVs8OISLiQH0RXlq \
+	jq/dyn/oVs8OISLiQH0RXlq
+
+	node jq/raw/bench.js | tee bench-jq.txt
+	node jq/function-reorder/ANebjkXMZJwaaRMM/bench.js | tee -a bench-jq.txt
+	node jq/export-reorder/ANebjkXMZJwaaRMM/bench.js | tee -a bench-jq.txt
+	node jq/operand-swap/ANebjkXMZJwaaRMM/bench.js | tee -a bench-jq.txt
+	node jq/dyn/ANebjkXMZJwaaRMM/bench.js | tee -a bench-jq.txt
+	node jq/function-reorder/Qg5lb3WN8a7eRFRb/bench.js | tee -a bench-jq.txt
+	node jq/export-reorder/Qg5lb3WN8a7eRFRb/bench.js | tee -a bench-jq.txt
+	node jq/operand-swap/Qg5lb3WN8a7eRFRb/bench.js | tee -a bench-jq.txt
+	node jq/dyn/Qg5lb3WN8a7eRFRb/bench.js | tee -a bench-jq.txt
+	node jq/function-reorder/oVs8OISLiQH0RXlq/bench.js | tee -a bench-jq.txt
+	node jq/export-reorder/oVs8OISLiQH0RXlq/bench.js | tee -a bench-jq.txt
+	node jq/operand-swap/oVs8OISLiQH0RXlq/bench.js | tee -a bench-jq.txt
+	node jq/dyn/oVs8OISLiQH0RXlq/bench.js | tee -a bench-jq.txt
